@@ -2,6 +2,7 @@ import React, {useEffect, useState, useRef} from "react";
 import TerminalHistory from "./TerminalHistory";
 
 const debugStatus:boolean = true;
+import {makeStyles} from "@material-ui/core/styles";
 
 function Terminal() {
     const [command, setCommand] = useState("");
@@ -9,6 +10,7 @@ function Terminal() {
     const [commandResult, setCommandResult] = useState("");
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
+    const classes =useStyles();
 
     const webSocket:any = useRef();
     const init = () => {
@@ -73,7 +75,7 @@ function Terminal() {
                 case "Enter":
                     setCommandResult(command);
                     
-                    if (command.toLowerCase() == "clear")
+                    if (command.toLowerCase().trim() == "clear")
                     {
                         setCommand("");
                         setServerResponse("");
@@ -106,8 +108,7 @@ function Terminal() {
 
                 // When the ArrowUp key is pressed we move down in the command history
                 case "ArrowUp":
-                    if (positionInHistory > 0) 
-                    {
+                    if (positionInHistory > 0) {
                         setPositionInHistory(prevState => prevState - 1);
                         setCommand(commandHistory[positionInHistory - 1]);
                     }
@@ -132,18 +133,53 @@ function Terminal() {
         )
 
     return (
-        <label>
+        <div className={classes.terminalContainer}>
             <div>
-                <TerminalHistory 
+                <TerminalHistory
                     history={commandHistory}
                 />
                 <div>{serverResponse ? "> " + serverResponse : ""}</div>
-                <hr></hr>
+                <hr className={classes.line}></hr>
             </div>
-            <input type="text" value={command} onChange={changeCommand} />
+            <div className={classes.lineContainer}>
+                <div className={classes.terminalSign}>
+                    {'>'}
+                </div>
+                <input className={classes.inputContainer} type="text" value={command} onChange={changeCommand} />
+            </div>
             {debugStatus && debugPanel}
-        </label>
+        </div>
     );
 }
+
+const useStyles = makeStyles(theme => ({
+    terminalContainer: {
+        height: "100vh",
+        width: "100%",
+        backgroundColor: "black",
+        color: "lightblue",
+        fontSize: "24px",
+    },
+    lineContainer:  {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        justifyContent: "flex-start"
+    },
+    inputContainer: {
+        width: "98%",
+        backgroundColor: "black",
+        color: "lightblue",
+        outlineWidth: 0,
+        border: "none",
+        fontSize: "24px",
+    },
+    terminalSign: {
+        width: "2%",
+    },
+    line : {
+        marginTop: 0,
+    }
+}));
 
 export default Terminal;
