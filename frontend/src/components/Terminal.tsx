@@ -1,4 +1,7 @@
 import React, {useEffect, useState} from "react";
+import TerminalHistory from "./TerminalHistory";
+
+const debugStatus:boolean = true;
 
 function Terminal() {
     const [command, setCommand] = useState("");
@@ -22,7 +25,7 @@ function Terminal() {
             setCommandHistory([]);
             setPositionInHistory(0);
         }
-    },[])
+    }, [])
 
     // Updating command history in the localStorage
     useEffect(() => {
@@ -39,6 +42,7 @@ function Terminal() {
                     setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                     setCommand("");
                     break;
+
                 // When the ArrowDown key is pressed we move up in the command history
                 case "ArrowDown":
                     if (positionInHistory < commandHistory.length) {
@@ -52,9 +56,11 @@ function Terminal() {
                         }
                     }
                     break;
+
                 // When the ArrowUp key is pressed we move down in the command history
                 case "ArrowUp":
-                    if (positionInHistory > 0) {
+                    if (positionInHistory > 0) 
+                    {
                         setPositionInHistory(prevState => prevState - 1);
                         setCommand(commandHistory[positionInHistory - 1]);
                     }
@@ -62,18 +68,32 @@ function Terminal() {
             }
         };
         document.addEventListener("keydown", listener);
+
         // When the component is about to get destroyed listener gets removed
         return () => {
             document.removeEventListener("keydown", listener);
         };
     }, [command, commandHistory, positionInHistory]);
 
+    const debugPanel = (<>
+            <hr></hr>State:
+            {command}<br/>
+            {commandResult}<br/>
+            {commandHistory.toString()}<br/>
+            {positionInHistory}<br/>
+        </>
+        )
+
     return (
         <label>
-            <input type="text" value={command} onChange={changeCommand} />
             <div>
-                {commandResult}
+                <TerminalHistory 
+                    history={commandHistory}
+                />
+                <hr></hr>
             </div>
+            <input type="text" value={command} onChange={changeCommand} />
+            {debugStatus && debugPanel}
         </label>
     );
 }
