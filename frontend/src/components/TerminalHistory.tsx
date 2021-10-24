@@ -1,12 +1,12 @@
-import React, {useEffect, useState} from "react";
 
-interface TerminalHistoryProp {
-    history: string[];
-  }
-
-function TerminalHistory({ history }: TerminalHistoryProp) : JSX.Element
+interface TerminalHistoryProp 
 {
-    const list = history.map(e => e ? <div>{e}</div> : <div>_</div>)
+  history: string[];
+}
+
+function TerminalHistory({ history } : TerminalHistoryProp) : JSX.Element
+{
+    const list = history.map((e, i) => e ? <div key = {i}>{e}</div> : <div key = {i}>_</div>)
 
     return <div>{list.slice(-10)}</div>;
 }

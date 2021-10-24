@@ -1,13 +1,46 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useRef} from "react";
 import TerminalHistory from "./TerminalHistory";
 
 const debugStatus:boolean = true;
 
 function Terminal() {
     const [command, setCommand] = useState("");
+    const [serverResponse, setServerResponse] = useState("");
     const [commandResult, setCommandResult] = useState("");
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
+
+    const webSocket:any = useRef();
+    const init = () => {
+        // Create WebSocket connection.
+        webSocket.current = new WebSocket('ws://localhost:8222');
+        console.log(webSocket.current)
+
+        // Connection opened
+        webSocket.current.addEventListener('open', function (event : any) {
+            console.log('Connected to the WS Server!')
+        });
+
+        // Connection closed
+        webSocket.current.addEventListener('close', function (event: any) {
+            console.log('Disconnected from the WS Server!')
+        });
+
+        // Listen for messages
+        webSocket.current.addEventListener('message', function (event: any) {
+            console.log('Message from server ', event.data);
+            setServerResponse(event.data)
+        });    
+    }
+
+    useEffect(() => {
+        init();
+      }, []);
+
+    // Send a msg to the websocket
+    const sendMsg = (msg : string) => {
+        webSocket.current.send(msg);
+    }
 
     const changeCommand = (event: React.ChangeEvent<HTMLInputElement>) => {
         setCommand(event.target.value);
@@ -39,8 +72,22 @@ function Terminal() {
                 // When the Enter key is pressed command is executed and saved in the command history
                 case "Enter":
                     setCommandResult(command);
-                    setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                    setCommand("");
+                    
+                    if (command.toLowerCase() == "clear")
+                    {
+                        setCommand("");
+                        setServerResponse("");
+                        setPositionInHistory(0);
+                        setCommandHistory([]);
+                        setCommandResult("");
+                    }
+                    else if (command && command.length)
+                    {
+                        sendMsg(command);
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setPositionInHistory(commandHistory.length + 1);
+                    }
                     break;
 
                 // When the ArrowDown key is pressed we move up in the command history
@@ -90,6 +137,7 @@ function Terminal() {
                 <TerminalHistory 
                     history={commandHistory}
                 />
+                <div>{serverResponse ? "> " + serverResponse : ""}</div>
                 <hr></hr>
             </div>
             <input type="text" value={command} onChange={changeCommand} />
