@@ -3,49 +3,25 @@ import TerminalHistory from "./TerminalHistory";
 
 const debugStatus:boolean = true;
 import {makeStyles} from "@material-ui/core/styles";
+import Input from "./Input";
+import ServerResponse from "./ServerResponse";
 
-function Terminal() {
+const Terminal = () => {
     const [command, setCommand] = useState("");
-    const [serverResponse, setServerResponse] = useState("");
     const [commandResult, setCommandResult] = useState("");
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
-    const classes =useStyles();
-
+    const [serverResponse, setServerResponse] = useState("");
     const webSocket:any = useRef();
-    const init = () => {
-        // Create WebSocket connection.
-        webSocket.current = new WebSocket('ws://localhost:8222');
-        console.log(webSocket.current)
+    const classes = useStyles();
 
-        // Connection opened
-        webSocket.current.addEventListener('open', function (event : any) {
-            console.log('Connected to the WS Server!')
-        });
-
-        // Connection closed
-        webSocket.current.addEventListener('close', function (event: any) {
-            console.log('Disconnected from the WS Server!')
-        });
-
-        // Listen for messages
-        webSocket.current.addEventListener('message', function (event: any) {
-            console.log('Message from server ', event.data);
-            setServerResponse(event.data)
-        });    
+    const changeCommand = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCommand(event.target.value);
     }
-
-    useEffect(() => {
-        init();
-      }, []);
 
     // Send a msg to the websocket
     const sendMsg = (msg : string) => {
         webSocket.current.send(msg);
-    }
-
-    const changeCommand = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setCommand(event.target.value);
     }
 
     // Retrieving previously used commands from the localStorage
@@ -134,19 +110,16 @@ function Terminal() {
 
     return (
         <div className={classes.terminalContainer}>
-            <div>
-                <TerminalHistory
-                    history={commandHistory}
-                />
-                <div>{serverResponse ? "> " + serverResponse : ""}</div>
-                <hr className={classes.line}></hr>
-            </div>
-            <div className={classes.lineContainer}>
-                <div className={classes.terminalSign}>
-                    {'>'}
-                </div>
-                <input className={classes.inputContainer} type="text" value={command} onChange={changeCommand} />
-            </div>
+            <TerminalHistory
+                history={commandHistory}
+            />
+            <ServerResponse
+                websocket={webSocket}
+                response={serverResponse}
+                setResponse={setServerResponse}
+            />
+            <hr className={classes.line}></hr>
+            <Input value={command} changeValue={changeCommand}/>
             {debugStatus && debugPanel}
         </div>
     );
