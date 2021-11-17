@@ -1,0 +1,47 @@
+import React from "react";
+import {makeStyles} from "@material-ui/core/styles";
+
+interface InputProps {
+    value: string;
+    changeValue: (event: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const Input = ({value, changeValue}: InputProps) => {
+    const classes = useStyles();
+
+    return(
+        <div className={classes.lineContainer}>
+            <div className={classes.terminalSign}>
+                {'>'}
+            </div>
+            <input
+                className={classes.inputContainer}
+                type="text"
+                value={value}
+                onChange={changeValue}
+            />
+        </div>
+    );
+}
+
+const useStyles = makeStyles(theme => ({
+    lineContainer:  {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        justifyContent: "flex-start"
+    },
+    inputContainer: {
+        width: "98%",
+        backgroundColor: "black",
+        color: "lightblue",
+        outlineWidth: 0,
+        border: "none",
+        fontSize: "24px",
+    },
+    terminalSign: {
+        width: "2%",
+    },
+}));
+
+export default Input;

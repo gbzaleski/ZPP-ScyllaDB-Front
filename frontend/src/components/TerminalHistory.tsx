@@ -1,14 +1,52 @@
+import {makeStyles} from "@material-ui/core/styles";
+import React from "react";
 
-interface TerminalHistoryProp
-{
+interface TerminalHistoryProp {
   history: string[];
 }
 
-function TerminalHistory({ history } : TerminalHistoryProp) : JSX.Element
+const TerminalHistory = ({ history } : TerminalHistoryProp) : JSX.Element =>
 {
-    const list = history.map((e, i) => e ? <div key = {i}>{'> ' + e}</div> : <div key = {i}>{'> '}</div>)
+    const classes = useStyles();
+    const list = history.map((e, i) => e ?
+        <div className={classes.inputContainer} key = {i}>
+            <div className={classes.lineContainer}>
+                <div className={classes.terminalSign}>
+                    {'>'}
+                </div>
+                <div className={classes.inputContainer}>{e}</div>
+            </div>
+        </div> :
+        <div className={classes.inputContainer} key = {i}>
+            {'> '}
+        </div>)
 
-    return <div>{list.slice(-10)}</div>;
+    return (
+        <div className={classes.inputContainer}>
+            {list.slice(-10)}
+        </div>
+    );
 }
+
+const useStyles = makeStyles(theme => ({
+    lineContainer:  {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        justifyContent: "flex-start"
+    },
+    inputContainer: {
+        width: "98%",
+        backgroundColor: "black",
+        color: "lightblue",
+        outlineWidth: 0,
+        border: "none",
+        fontSize: "24px",
+    },
+    terminalSign: {
+        width: "2%",
+    },
+}));
+
 
 export default TerminalHistory
