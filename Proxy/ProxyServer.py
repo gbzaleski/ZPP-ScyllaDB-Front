@@ -7,20 +7,20 @@ class ProxyServer:
         self.web_port = websocket_port
         self.web_address = websocket_address
         self.socket_info = (socket_address, socket_port)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
           
     def run(self):
         async def echo(websocket, path):
             try:
-                self.socket.connect(self.socket_info)
                 async for message in websocket:
+                    self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self.socket.connect(self.socket_info)
                     try: 
-                        self.socket.sendall('SELECT * FROM table_name;'.encode())
-                        data = self.socket.recv(1)
+                        self.socket.sendall(message.encode())
+                        data = self.socket.recv(1024)
                         result = b''
                         while(len(data) > 0):
                             result = result + data
-                            data = self.socket.recv(1)
+                            data = self.socket.recv(1024)
                         await websocket.send(str(result))
                     finally:
                         self.socket.close()
