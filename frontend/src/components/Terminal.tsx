@@ -5,6 +5,8 @@ const debugStatus:boolean = true;
 import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
 import ServerResponse from "./ServerResponse";
+import {CQLDriver} from "../CQL-Driver/src/Driver";
+import { isConstructorDeclaration } from "typescript";
 
 const Terminal = () => {
     const [command, setCommand] = useState("");
@@ -13,6 +15,7 @@ const Terminal = () => {
     const [positionInHistory, setPositionInHistory] = useState(0);
     const [serverResponse, setServerResponse] = useState("");
     const webSocket:any = useRef();
+    const driver = new CQLDriver();
     const classes = useStyles();
 
     const changeCommand = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,7 +24,15 @@ const Terminal = () => {
 
     // Send a msg to the websocket
     const sendMsg = (msg : string) => {
-        webSocket.current.send(msg);
+        const coder = new TextEncoder()
+        
+        webSocket.current.send(coder.encode(msg));
+    }
+
+    const sendHandshake = () => {
+        const coder = new TextEncoder()
+        console.log(driver.handshake({version: 4, flag: 0, stream: 1}))
+        webSocket.current.send(coder.encode(driver.handshake({version: 4, flag: 0, stream: 1})));
     }
 
     // Retrieving previously used commands from the localStorage
@@ -58,9 +69,16 @@ const Terminal = () => {
                         setPositionInHistory(0);
                         setCommandHistory([]);
                         setCommandResult("");
+                    } else if (command.toLowerCase().trim() == "handshake") {
+                        setServerResponse("")
+                        sendHandshake();
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setPositionInHistory(commandHistory.length + 1);
                     }
                     else if (command && command.length)
                     {
+                        setServerResponse("")
                         sendMsg(command);
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
