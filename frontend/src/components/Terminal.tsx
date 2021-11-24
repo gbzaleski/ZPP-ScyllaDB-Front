@@ -131,14 +131,12 @@ const Terminal = () => {
             <TerminalHistory
                 history={commandHistory}
             />
-            <ServerResponse
+            <Input value={command} changeValue={changeCommand}/>
+             <ServerResponse
                 websocket={webSocket}
                 response={serverResponse}
                 setResponse={setServerResponse}
             />
-            <hr className={classes.line}></hr>
-            <Input value={command} changeValue={changeCommand}/>
-            {debugStatus && debugPanel}
         </div>
     );
 }

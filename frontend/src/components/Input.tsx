@@ -10,16 +10,22 @@ const Input = ({value, changeValue}: InputProps) => {
     const classes = useStyles();
 
     return(
-        <div className={classes.lineContainer}>
-            <div className={classes.terminalSign}>
-                {'>'}
+        <div>
+            <hr/>
+            <div className={classes.lineContainer}>
+                Input
             </div>
-            <input
-                className={classes.inputContainer}
-                type="text"
-                value={value}
-                onChange={changeValue}
-            />
+            <div className={classes.lineContainer}>
+                <div className={classes.terminalSign}>
+                    {'>'}
+                </div>
+                <input
+                    className={classes.inputContainer}
+                    type="text"
+                    value={value}
+                    onChange={changeValue}
+                />
+            </div>
         </div>
     );
 }

@@ -33,13 +33,20 @@ const ServerResponse = ({websocket, response, setResponse} : ServerResponseProps
     }, []);
 
     return (
-        <div className={classes.lineContainer}>
-            <div className={classes.terminalSign}>
-                {'>'}
+        <div>
+            <hr/>
+            <div className={classes.lineContainer}>
+                Response
             </div>
-            <div className={classes.inputContainer}>
-                {response}
+            <div className={classes.lineContainer}>
+                <div className={classes.terminalSign}>
+                    {'>'}
+                </div>
+                <div className={classes.inputContainer}>
+                    {response}
+                </div>
             </div>
+            <hr/>
         </div>
     )
 }
