@@ -10,20 +10,27 @@ class ProxyServer:
           
     def run(self):
         async def echo(websocket, path):
+            
             try:
                 async for message in websocket:
                     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     self.socket.connect(self.socket_info)
+                    self.socket.settimeout(1)
                     try: 
-                        self.socket.sendall(message.encode())
-                        data = self.socket.recv(1024)
-                        result = b''
-                        while(len(data) > 0):
-                            result = result + data
+                        self.socket.sendall(message)
+
+                        try:
                             data = self.socket.recv(1024)
-                        await websocket.send(str(result))
+                            result = b''
+                            while(len(data) > 0):
+                                result = result + data
+                                data = self.socket.recv(1024)
+                            await websocket.send(str(result))
+                        except socket.timeout:
+                            print("Timeout")
                     finally:
                         self.socket.close()
+                
             except websockets.exceptions.ConnectionClosed as e:
                 print("A client just disconnected")
 
