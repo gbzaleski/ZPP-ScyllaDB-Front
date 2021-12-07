@@ -12,7 +12,7 @@ const ServerResponse = ({websocket, response, setResponse} : ServerResponseProps
 
     useEffect(() => {
         // Create WebSocket connection.
-        websocket.current = new WebSocket('ws://localhost:8222');
+        websocket.current = new WebSocket('ws://localhost:8222', "echo");
         console.log(websocket.current)
 
         // Connection opened
