@@ -9,12 +9,13 @@
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
     "web-vitals": "^1.0.1",
+    "biguint-format": "^1.0.2",
     "@material-ui/core": "^4.11.3"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha -r ts-node/register 'tests/**/*.ts'",
     "eject": "react-scripts eject"
   },
   "browserslist": {
@@ -27,6 +28,10 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ],
+    "exclude": [
+      "./tests/",
+      "./node_modules/"
     ]
   }
 }
