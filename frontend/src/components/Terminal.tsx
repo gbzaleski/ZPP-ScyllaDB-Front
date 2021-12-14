@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useRef} from "react";
 import TerminalHistory from "./TerminalHistory";
+import {IntToLong, numberToInt, numberToShort} from "../CQL-Driver/src/utils/conversions"
 
 const debugStatus:boolean = true;
 import {makeStyles} from "@material-ui/core/styles";
@@ -31,8 +32,8 @@ const Terminal = () => {
 
     const sendHandshake = () => {
         const coder = new TextEncoder()
-        console.log(driver.handshake({version: 4, flag: 0, stream: 1}))
-        webSocket.current.send(coder.encode(driver.handshake({version: 4, flag: 0, stream: 1})));
+        //console.log(driver.handshake({version: 4, flag: 0, stream: 1}))
+        //webSocket.current.send(coder.encode(driver.handshake({version: 4, flag: 0, stream: 1})));
     }
 
     // Retrieving previously used commands from the localStorage
