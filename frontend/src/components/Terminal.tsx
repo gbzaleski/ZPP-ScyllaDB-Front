@@ -1,13 +1,10 @@
 import React, {useEffect, useState, useRef} from "react";
 import TerminalHistory from "./TerminalHistory";
-import {IntToLong, numberToInt, numberToShort} from "../CQL-Driver/src/utils/conversions"
 
-const debugStatus:boolean = true;
 import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
 import ServerResponse from "./ServerResponse";
 import {CQLDriver} from "../CQL-Driver/src/Driver";
-import { isConstructorDeclaration } from "typescript";
 
 const Terminal = () => {
     const [command, setCommand] = useState("");
@@ -15,6 +12,8 @@ const Terminal = () => {
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
     const [serverResponse, setServerResponse] = useState("");
+    const [enteringQuery, setEnteringQuery] = useState(false);
+    const [query, setQuery] = useState("");
     const webSocket:any = useRef();
     const driver = new CQLDriver();
     const classes = useStyles();
@@ -32,8 +31,7 @@ const Terminal = () => {
 
     const sendHandshake = () => {
         const coder = new TextEncoder()
-        //console.log(driver.handshake({version: 4, flag: 0, stream: 1}))
-        //webSocket.current.send(coder.encode(driver.handshake({version: 4, flag: 0, stream: 1})));
+        webSocket.current.send(coder.encode(driver.handshake()));
     }
 
     // Retrieving previously used commands from the localStorage
@@ -76,8 +74,9 @@ const Terminal = () => {
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
                         setPositionInHistory(commandHistory.length + 1);
-                    }
-                    else if (command && command.length)
+                    } else if (command.toLowerCase().trim() == "cqlsh") {
+
+                    } else if (command && command.length)
                     {
                         setServerResponse("")
                         sendMsg(command);
