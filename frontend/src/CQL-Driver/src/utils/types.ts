@@ -18,6 +18,12 @@ export type Uuid = {
     uuid: Buffer
 };
 
+export type Consistency = {
+    consistency: Short,
+    name : string
+}
+
+
 export type String = {
     length: Short
     string: Buffer
@@ -52,3 +58,5 @@ export type stringMap = {
     length: Short
     stringMap: Buffer
 }
+
+

@@ -12,10 +12,9 @@ const Terminal = () => {
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
     const [serverResponse, setServerResponse] = useState("");
-    const [enteringQuery, setEnteringQuery] = useState(false);
-    const [query, setQuery] = useState("");
+
     const webSocket:any = useRef();
-    const driver = new CQLDriver();
+    const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
 
     const changeCommand = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,6 +36,11 @@ const Terminal = () => {
     // Retrieving previously used commands from the localStorage
     useEffect(() => {
         let receivedHistory = window.localStorage.getItem('commandHistory');
+        let receivedConsistency = window.sessionStorage.getItem('consistency');
+
+        if (typeof receivedConsistency === "string") {
+            driver.setConsistency(receivedConsistency)
+        }
 
         if (typeof receivedHistory === "string") {
             let parsedReceivedHistory = JSON.parse(receivedHistory);
@@ -51,7 +55,8 @@ const Terminal = () => {
     // Updating command history in the localStorage
     useEffect(() => {
         window.localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
-    }, [commandHistory]);
+        window.sessionStorage.setItem('consistency', driver.getConsistency())
+    }, [commandHistory, driver]);
 
     // Creating keylogger
     useEffect(() => {
@@ -60,7 +65,7 @@ const Terminal = () => {
                 // When the Enter key is pressed command is executed and saved in the command history
                 case "Enter":
                     setCommandResult(command);
-                    
+                    const tokenizedCommand = command.split(' ')
                     if (command.toLowerCase().trim() == "clear")
                     {
                         setCommand("");
@@ -74,8 +79,18 @@ const Terminal = () => {
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
                         setPositionInHistory(commandHistory.length + 1);
-                    } else if (command.toLowerCase().trim() == "cqlsh") {
-
+                    } else if (tokenizedCommand.length == 1 && tokenizedCommand[0] == "CONSISTENCY") {
+                        setServerResponse("Current consistency level is " + driver.getConsistency() + ".")
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setPositionInHistory(commandHistory.length + 1);
+                    } else if (tokenizedCommand.length == 2 && tokenizedCommand[0] == "CONSISTENCY") {
+                        setServerResponse(driver.setConsistency(tokenizedCommand[1]) == 0 ?
+                            "Successfully changed consistency level to " + tokenizedCommand[1] + "." :
+                            "Invalid consistency level")
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setPositionInHistory(commandHistory.length + 1);
                     } else if (command && command.length)
                     {
                         setServerResponse("")
@@ -115,16 +130,7 @@ const Terminal = () => {
         return () => {
             document.removeEventListener("keydown", listener);
         };
-    }, [command, commandHistory, positionInHistory]);
-
-    const debugPanel = (<>
-            <hr></hr>State:
-            {command}<br/>
-            {commandResult}<br/>
-            {commandHistory.toString()}<br/>
-            {positionInHistory}<br/>
-        </>
-        )
+    }, [command, commandHistory, positionInHistory, driver]);
 
     return (
         <div className={classes.terminalContainer}>

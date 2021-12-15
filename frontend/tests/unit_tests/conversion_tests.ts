@@ -93,6 +93,7 @@ describe('Converting number to uuid', () => {
             Number(random >> 24n & 0xffn), Number(random >> 16n & 0xffn),
             Number(random >> 8n & 0xffn), Number(random & 0xffn)
         ]))).to.equal(0);
+        console.log(numberToShort(BigInt(-1)))
     });
 });
 
