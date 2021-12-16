@@ -1,16 +1,16 @@
 const getMessageCode = (messageType: String) : number => {
     switch (messageType) {
         case "ERROR": {
-            return 1;
+            return 0;
         }
         case "STARTUP": {
-            return 2;
+            return 1;
         }
         case "READY": {
-            return 3
+            return 2;
         }
         case "AUTHENTICATE": {
-            return 4;
+            return 3;
         }
         case "OPTIONS": {
             return 5;
@@ -25,7 +25,7 @@ const getMessageCode = (messageType: String) : number => {
             return 8;
         }
         case "PREPARE": {
-            return 79;
+            return 9;
         }
         case "EXECUTE": {
             return 10;
