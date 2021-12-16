@@ -94,7 +94,9 @@ const Terminal = () => {
                     } else if (command && command.length)
                     {
                         setServerResponse("")
-                        sendMsg(command);
+                        const coder = new TextEncoder()
+                        console.log(driver.query(command));
+                        sendMsg(driver.query(command).toString());
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
                         setPositionInHistory(commandHistory.length + 1);

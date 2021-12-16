@@ -2,6 +2,7 @@ import handshakeMessage from "./functions/Handshake"
 import {Consistency} from "./utils/types";
 import getConsistency from "./functions/Consistency";
 import {numberToShort} from "./utils/conversions";
+import getQueryMessage from "./utils/getQueryMessage";
 
 class CQLDriver {
     #consistency: Consistency
@@ -12,8 +13,8 @@ class CQLDriver {
 
     handshake = handshakeMessage.bind(this)
 
-    query = (body : string) => {
-
+    query = (body : string) : Buffer => {
+        return getQueryMessage(body, this.#consistency);
     }
 
     setConsistency = (s : string) => {
