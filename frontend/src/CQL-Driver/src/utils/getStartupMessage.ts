@@ -2,13 +2,15 @@ import Frame from "./FrameTemplate";
 import setOpcode from "./setOpcode";
 import setVersion from "./setVersion";
 import {Buffer} from "buffer";
-import setStartupBody from "./setStartupBody";
+import addStartupBody from "./addStartupBody";
 
 const getStartupMessage = () : Buffer => {
     let buffer = Frame();
     setOpcode(buffer, "STARTUP");
     setVersion(buffer, 4);
-    setStartupBody(buffer);
+    console.log(buffer)
+    buffer = addStartupBody(buffer);
+    console.log(buffer)
     return buffer;
 }
 

@@ -11,6 +11,11 @@ class CQLDriver {
     }
 
     handshake = handshakeMessage.bind(this)
+
+    query = (body : string) => {
+
+    }
+
     setConsistency = (s : string) => {
         const received = getConsistency(s);
         if (Buffer.compare(received.consistency.short, numberToShort(BigInt(-1)).short) != 0) {
