@@ -2,12 +2,13 @@ import React, {useEffect} from "react";
 import {makeStyles} from "@material-ui/core/styles";
 
 interface ServerResponseProps {
+    driver: any;
     websocket: any;
     response: string;
     setResponse: (s: string) => void
 }
 
-const ServerResponse = ({websocket, response, setResponse} : ServerResponseProps) => {
+const ServerResponse = ({driver, websocket, response, setResponse} : ServerResponseProps) => {
     const classes = useStyles();
 
     useEffect(() => {
@@ -28,7 +29,7 @@ const ServerResponse = ({websocket, response, setResponse} : ServerResponseProps
         // Listen for messages
         websocket.current.addEventListener('message', function (event: any) {
             console.log('Message from server ', event.data);
-            setResponse(event.data)
+            setResponse(driver.getResponse(event.data))
         });
     }, []);
 

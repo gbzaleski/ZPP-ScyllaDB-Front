@@ -23,7 +23,6 @@ export type Consistency = {
     name : string
 }
 
-
 export type String = {
     length: Short
     string: Buffer

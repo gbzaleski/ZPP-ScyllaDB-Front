@@ -3,6 +3,7 @@ import {Consistency} from "./utils/types";
 import getConsistency from "./functions/Consistency";
 import {numberToShort} from "./utils/conversions";
 import getQueryMessage from "./utils/getQueryMessage";
+import getQueryResult from "./utils/getQueryResult";
 
 class CQLDriver {
     #consistency: Consistency
@@ -27,6 +28,10 @@ class CQLDriver {
     }
     getConsistency = () : string => {
         return this.#consistency.name
+    }
+
+    getResponse = (s: string) => {
+        return getQueryResult(s)
     }
 }
 
