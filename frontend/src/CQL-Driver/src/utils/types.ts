@@ -35,7 +35,7 @@ export type LongString = {
 
 export type StringList = {
     length: Short
-    stringList: Buffer
+    stringList: String[]
 }
 
 export type bytes = {

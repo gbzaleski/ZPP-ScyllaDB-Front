@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import {Byte, Int, Long, Short, String, Uuid} from "./types";
+import {Byte, Int, Long, Short, String, StringList, Uuid} from "./types";
 const format = require("biguint-format");
 
 export const numberToUuid = (value : bigint) : Uuid => {
@@ -25,6 +25,18 @@ export const numberToByte = (value : bigint) : Byte => {
 export const bufferToString = (buf : Buffer) : String => {
     const len = format(buf.slice(0, 2))
     return {length: numberToShort(len), string: buf.slice(2, len)}
+}
+
+export const bufferToStringList = (buf : Buffer) : StringList => {
+    const len = format(buf.slice(0, 2))
+    let parsed = 2
+    let result : String[] = []
+    for (let i = 0; i < len; ++i) {
+        const newItem = bufferToString(buf.slice(parsed))
+        parsed += format(newItem.length) + 2
+        result.push(newItem)
+    }
+    return  {length: numberToShort(len), stringList: result}
 }
 
 const bigIntToBuffer = (value : bigint, size : number) : Buffer => {
