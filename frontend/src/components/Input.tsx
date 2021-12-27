@@ -3,7 +3,7 @@ import {makeStyles} from "@material-ui/core/styles";
 
 interface InputProps {
     value: string;
-    changeValue: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    changeValue: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
 const Input = ({value, changeValue}: InputProps) => {
@@ -19,9 +19,8 @@ const Input = ({value, changeValue}: InputProps) => {
                 <div className={classes.terminalSign}>
                     {'>'}
                 </div>
-                <input
-                    className={classes.inputContainer}
-                    type="text"
+                <textarea
+                    className={classes.inputContainer} // TODO - no more is inputContainer
                     value={value}
                     onChange={changeValue}
                 />

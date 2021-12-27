@@ -28,10 +28,18 @@ const ServerResponse = ({driver, websocket, response, setResponse} : ServerRespo
 
         // Listen for messages
         websocket.current.addEventListener('message', function (event: any) {
-            event.data.arrayBuffer().then((response: any) => setResponse(driver.getResponse(Buffer.from(response))))
-          
-           // console.log('Message from server ', Buffer.from(event.data.arrayBuffer()));
-           //console.log('Message from server ', event.data.json());
+            //event.data.arrayBuffer().then((response: any) => setResponse(driver.getResponse(Buffer.from(response))))
+            console.log("Received: ", event, " ", typeof(event.data));
+
+            const message = event.data.substr(event.data.indexOf("b'"));
+            // Tu trzeba jakoś ogarnąć żeby zbierać tego Uint8Arraya a nie stringa
+
+            //const decoder = new TextDecoder();
+            //const str = decoder.decode(message);
+           // console.log(message, " ", str);
+
+            setResponse(message);
+
         });
     }, []);
 

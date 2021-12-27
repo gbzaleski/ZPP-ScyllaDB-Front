@@ -12,12 +12,13 @@ const Terminal = () => {
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
     const [serverResponse, setServerResponse] = useState("");
+    const [editMode, setEditMode] = useState(false);
 
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
 
-    const changeCommand = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value);
     }
 
@@ -66,7 +67,22 @@ const Terminal = () => {
                 case "Enter":
                     setCommandResult(command);
                     const tokenizedCommand = command.split(' ')
-                    if (command.toLowerCase().trim() == "clear")
+
+                    if (command.toLowerCase().trim() == "long")
+                    {
+                        setEditMode(true)
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setPositionInHistory(commandHistory.length + 1);
+                    }
+                    else if (command.toLowerCase().trim() == "short")
+                    {
+                        setEditMode(false)
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setPositionInHistory(commandHistory.length + 1)
+                    }
+                    else if (command.toLowerCase().trim() == "clear")
                     {
                         setCommand("");
                         setServerResponse("");
@@ -93,8 +109,10 @@ const Terminal = () => {
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (command && command.length)
                     {
+                        if (editMode && command.trim().slice(-1) !== ';') // Commands are to end with semicolon
+                            break;
+
                         setServerResponse("")
-                        const coder = new TextEncoder()
                         console.log(driver.query(command));
                         sendMsg(driver.query(command).toString());
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
