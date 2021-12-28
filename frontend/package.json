@@ -4,13 +4,15 @@
   "requires": true,
   "packages": {},
   "dependencies": {
-    "@types/react": "^17.0.1",
-    "@types/react-dom": "^17.0.10",
+    "@material-ui/core": "^4.11.3",
+    "@types/react": "^17.0.38",
+    "@types/react-dom": "^17.0.11",
+    "biguint-format": "^1.0.2",
+    "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
-    "web-vitals": "^1.0.1",
-    "biguint-format": "^1.0.2",
-    "@material-ui/core": "^4.11.3"
+    "typescript": "^4.5.4",
+    "web-vitals": "^1.0.1"
   },
   "scripts": {
     "start": "react-scripts start",

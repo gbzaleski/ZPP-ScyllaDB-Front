@@ -25,19 +25,18 @@ const getSchemaChangeResult = () => {
 
 }
 
-const getQueryResult = (result: string) : string => {
-    const buffer = Buffer.from(result, 'utf8');
+const getQueryResult = (buffer: Buffer) : string => {
     const opcode = getOpcode(buffer);
     if (opcode != getMessageCode("RESULT")) {
-        return "Invalid opcode received";
+        return "Invalid opcode received: " + opcode.toString();
     }
-
+    console.log(buffer)
     const length = getLength(buffer)
-
+    console.log(length)
     const body = buffer.slice(9, 9 + Number(length));
 
-    const code = format(body.slice(0, 4))
-
+    let code = Number(format(body.slice(0, 4)))
+    console.log(code)
     switch (code) {
         case 1: {
             return getVoidResult();

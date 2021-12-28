@@ -144,7 +144,7 @@ const Terminal = () => {
                 websocket={webSocket}
                 response={serverResponse}
                 setResponse={setServerResponse}
-                driver={CQLDriver}
+                driver={driver}
             />
         </div>
     );

@@ -30,8 +30,8 @@ class CQLDriver {
         return this.#consistency.name
     }
 
-    getResponse = (s: string) => {
-        return getQueryResult(s)
+    getResponse = (buf: Buffer) => {
+        return getQueryResult(buf)
     }
 }
 

@@ -28,8 +28,10 @@ const ServerResponse = ({driver, websocket, response, setResponse} : ServerRespo
 
         // Listen for messages
         websocket.current.addEventListener('message', function (event: any) {
-            console.log('Message from server ', event.data);
-            setResponse(driver.getResponse(event.data))
+            event.data.arrayBuffer().then((response: any) => setResponse(driver.getResponse(Buffer.from(response))))
+          
+           // console.log('Message from server ', Buffer.from(event.data.arrayBuffer()));
+           //console.log('Message from server ', event.data.json());
         });
     }, []);
 
