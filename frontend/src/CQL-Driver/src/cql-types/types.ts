@@ -24,6 +24,14 @@ class ASCII implements type {
 class BIGINT implements type {
     value : bigint = 0n
 
+    constructor(data: Buffer) {
+        var mult = 1n
+        for (var pair of data.reverse().entries()) {
+           this.value += BigInt(pair[1]) * mult;
+           mult *= 256n;
+        }
+    }
+
     toString() {
         return ""
     }
