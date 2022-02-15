@@ -33,9 +33,9 @@ export const bufferToInt = (buf : Buffer) : Int => {
 export const bufferToOption = (buf : Buffer) : Option  =>  {
     const id = bufferToShort(buf);
     let stringLen = 2
-    const idVal = format(id)
+    const idVal = format(id.short)
     let value = null
-
+    /*
 
     if (idVal == 0) {
         value = bufferToString(buf.slice(stringLen))
@@ -78,24 +78,26 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
         }
         value = optionList
     }
-
-    return {id: id, value : value, size: stringLen}
+    */
+    return {id: id, value : value, size: 0}
 }
 
 export const bufferToString = (buf : Buffer) : String => {
-    const len = format(buf.slice(0, 2))
-    return {length: numberToShort(len), string: buf.slice(2, len)}
+    const len = Number(format(buf.slice(0, 2)))
+  
+    return {length: numberToShort(BigInt(len)), string: buf.slice(2, len + 2)}
 }
 
 export const bufferToBytes = (buf : Buffer) : Bytes | null => {
-    const len = format(buf.slice(0, 4))
+    const len = Number(format(buf.slice(0, 4)))
     if (len < 0) {
         return null;
     }
-    return {length: numberToInt(len), bytes: buf.slice(4, len)}
+    return {length: numberToInt(BigInt(len)), bytes: buf.slice(4, len + 4)}
 }
 
 export const optionToReadableString = (id : Short, byt: Bytes) : string => {
+    console.log(id)
     const idVal = format(id.short)
 
     let result = "";
@@ -145,8 +147,8 @@ export const optionToReadableString = (id : Short, byt: Bytes) : string => {
 
     }
     // Int
-    else if (idVal == 9) {
-
+    else if (idVal == 12) {
+        return buf.toString()
     }
     return ""
 }

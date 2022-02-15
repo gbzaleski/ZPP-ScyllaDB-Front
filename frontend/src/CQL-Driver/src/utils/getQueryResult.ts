@@ -8,6 +8,7 @@ import {
     optionToReadableString
 } from "./conversions";
 import getLength from "./getLength";
+import { getOpcode, getOpcodeName } from "./getOpcode";
 const format = require("biguint-format");
 
 const getVoidResult = () : string => {
@@ -15,6 +16,7 @@ const getVoidResult = () : string => {
 }
 
 const getRowsResult = (buf : Buffer) : string => {
+    console.log(buf)
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -34,57 +36,62 @@ const getRowsResult = (buf : Buffer) : string => {
     const columnCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
     stringLen += 4
     let keySpaceName, tableName
-
     if (globalTableSpecPresent) {
         keySpaceName = bufferToString(buf.slice(stringLen))
-        stringLen += format(keySpaceName.length)
+        stringLen += Number(format(keySpaceName.length))
         tableName = bufferToString(buf.slice(stringLen))
-        stringLen += format(tableName.length)
+        stringLen += Number(format(tableName.length))
     }
-
+    console.log(globalTableSpecPresent)
     let columnVars : any = Array.from({length: columnCount})
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
+            console.log("XD")
             keySpaceName = bufferToString(buf.slice(stringLen))
-            stringLen += format(keySpaceName.length)
+            stringLen += Number(format(keySpaceName.length.short)) + 2
             tableName = bufferToString(buf.slice(stringLen))
-            stringLen += format(tableName.length)
+            stringLen += Number(format(tableName.length.short)) + 2
         }
-
+        
         let columnName = bufferToString(buf.slice(stringLen))
-        columnVars[i].name = columnName
-        stringLen += format(columnName.length)
-        let type = bufferToOption(buf.slice(stringLen))
-        columnVars[i].type = type
-        stringLen += type.size
+        console.log(columnName.string)
+        stringLen += Number(format(columnName.length.short)) + 2
+        let columnType = bufferToOption(buf.slice(stringLen))
+        console.log(format(columnType.id.short))
+        columnVars[i] = {name: columnName, type: columnType}
+        stringLen += columnType.size + 2
     }
-
+    
     const rowCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
+    console.log(rowCount)
+    stringLen += 4
     let rows : any[] = Array.from({length: rowCount})
     for (let i = 0; i < rowCount; ++i) {
         let row : any = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
             row[j] = bufferToBytes(buf.slice(stringLen))
+            console.log(row[j])
             stringLen += 4
             if (row[j] != null) {
-                stringLen += format(row[j].length)
+                stringLen += Number(format(row[j].length.int))
             }
         }
         rows[i] = row
     }
-
+    
     let result = ""
-
+    console.log(columnCount)
     for (let i = 0; i < columnCount; ++i) {
+        console.log(columnVars[i])
         result += columnVars[i].name.string.toString() + " ";
     }
     result += "\n"
 
-    /*for (let i = 0; i < rowCount; ++i) {
+    for (let i = 0; i < rowCount; ++i) {
         for (let j = 0; j < columnCount; ++j) {
-            result += optionToReadableString(columnVars[i].type, rows[i][j])
+            result += optionToReadableString(columnVars[j].type.id, rows[i][j])
         }
-    }*/
+    }
 
     return result
 }
@@ -97,9 +104,10 @@ const getPreparedResult = () => {
 
 }
 
-const getSchemaChangeResult = (buf : Buffer) => {
+const getSchemaChangeResult = (buf : Buffer) : string => {
     let stringLen = 0
     const changeType = bufferToString(buf).string.toString()
+    console.log(changeType)
     stringLen += changeType.length + 2
     const target = bufferToString(buf.slice(stringLen)).string.toString()
     stringLen += target.length + 2
@@ -111,20 +119,20 @@ const getSchemaChangeResult = (buf : Buffer) => {
         const object = bufferToString(buf.slice(stringLen)).string.toString()
         stringLen += object.length + 2
         const name = bufferToString(buf.slice(stringLen)).string.toString()
-        option = object + name
+        option = object + " " + name
     } else if (target == "FUNCTION" || target == "AGGREGATE") {
         const keyspace = bufferToString(buf.slice(stringLen)).string.toString()
         stringLen += keyspace.length + 2
         const fun = bufferToString(buf.slice(stringLen)).string.toString()
         stringLen += keyspace.length + 2
         const args = bufferToStringList(buf.slice(stringLen))
-        option = keyspace + fun
+        option = keyspace + " " + fun
         for (let i = 0; i < format(args.length.short); ++i) {
-            option += args.stringList[i].string.toString()
+            option += " " + args.stringList[i].string.toString()
         }
     }
 
-    return changeType + target + option
+    return changeType + " " + target + " " + option
 }
 
 const getQueryResult = (buffer: Buffer) : string => {
@@ -135,26 +143,32 @@ const getQueryResult = (buffer: Buffer) : string => {
     const body = buffer.slice(9, 9 + Number(length));
 
     let code = Number(format(body.slice(0, 4)))
-    console.log(code)
-    switch (code) {
-        case 1: {
-            return getVoidResult();
+    if (getOpcodeName(buffer) == "RESULT") {
+        console.log(code)
+        switch (code) {
+            case 1: {
+                return getVoidResult();
+            }
+            case 2: {
+                //return "Rows";
+                return getRowsResult(body.slice(4, Number(length)))
+            }
+            case 3: {
+                return getSetKeyspaceResult(body.slice(4, Number(length)));
+            }
+            case 4: {
+                return "Prepared";
+            }
+            case 5: {
+                //return "ScehmaChange";
+                return getSchemaChangeResult(body.slice(4, Number(length)));
+            }
         }
-        case 2: {
-            return "Rows";
-        }
-        case 3: {
-            return getSetKeyspaceResult(body.slice(4, Number(length)));
-        }
-        case 4: {
-            return "Prepared";
-        }
-        case 5: {
-            return getSchemaChangeResult(body.slice(4, Number(length)));
-        }
-    }
 
-    return "Invalid body code" + body.toString()
+        return "Invalid body code" + body.toString()
+    } else {
+        return getOpcodeName(buffer) + body.toString();
+    }
 }
 
 export default getQueryResult;
