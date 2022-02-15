@@ -21,7 +21,7 @@ class ProxyServer:
                     self.socket.sendall(message)
                     # Temporary solution
                     data = self.socket.recv(2137000)
-                    await websocket.send(str(data))
+                    await websocket.send(data)
 
             except websockets.exceptions.ConnectionClosed as e:
                 print("A client just disconnected")

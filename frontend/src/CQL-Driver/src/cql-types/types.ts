@@ -1,4 +1,4 @@
-import {Blob} from 'buffer';
+import {Blob, Buffer} from 'buffer';
 import {bufferToInt} from "../utils/conversions";
 const format = require("biguint-format");
 
@@ -99,7 +99,7 @@ export class DECIMAL implements type {
 export class DOUBLE implements type {
     value : number
     constructor(data: Buffer) {
-        this.value = data.readDoubleLE()
+        this.value = data.readDoubleBE(0)
     }
 
     toString() {
@@ -110,7 +110,7 @@ export class DOUBLE implements type {
 export class FLOAT implements type {
     value : number
     constructor(data: Buffer) {
-        this.value = data.readFloatLE()
+        this.value = data.readFloatBE(0)
     }
 
     toString() {

@@ -102,11 +102,13 @@ const getRowsResult = (buf : Buffer) : string => {
     }
     result += "\n"
 
-    let content : Array<Array<type | null>> = []
+    let content : Array<Array<type | null>> = Array.from({length: rowCount})
 
     for (let i = 0; i < rowCount; ++i) {
+        content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            content[i][j] = getTypeFrom(Number(format(columnVars[j].type.id)), rows[i][j])
+            //console.log(columnVars[j].type)
+            content[i][j] = getTypeFrom(Number(format(columnVars[j].type.id.short)), rows[i][j].bytes)
         }
     }
 
