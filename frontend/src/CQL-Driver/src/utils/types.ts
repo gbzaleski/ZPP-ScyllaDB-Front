@@ -38,7 +38,7 @@ export type StringList = {
     stringList: String[]
 }
 
-export type bytes = {
+export type Bytes = {
     length: Int
     bytes: Buffer
 }
@@ -46,6 +46,12 @@ export type bytes = {
 export type value = {
     length: Int
     value: Buffer
+}
+
+export type Option = {
+    id: Short
+    value: any
+    size : number
 }
 
 export type shortBytes = {

@@ -1,7 +1,12 @@
 import {Buffer} from "buffer";
-import getOpcode from "./getOpcode";
-import getMessageCode from "./getMessageCode";
-import {bufferToString, bufferToStringList} from "./conversions";
+import {
+    bufferToBytes,
+    bufferToInt,
+    bufferToOption,
+    bufferToString,
+    bufferToStringList,
+    optionToReadableString
+} from "./conversions";
 import getLength from "./getLength";
 const format = require("biguint-format");
 
@@ -9,8 +14,79 @@ const getVoidResult = () : string => {
     return ""
 }
 
-const getRowsResult = () => {
+const getRowsResult = (buf : Buffer) : string => {
+    let stringLen = 0
+    let globalTableSpecPresent = false
+    let hasMorePages = false
+    let noMetaData = false
+    const metaDataFlags = Number(format(bufferToInt(buf).int))
 
+    if (metaDataFlags & 1) {
+        globalTableSpecPresent = true
+    }
+    if (metaDataFlags & 2) {
+        hasMorePages = true
+    }
+    if (metaDataFlags & 4) {
+        noMetaData = true
+    }
+    stringLen += 4
+    const columnCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
+    stringLen += 4
+    let keySpaceName, tableName
+
+    if (globalTableSpecPresent) {
+        keySpaceName = bufferToString(buf.slice(stringLen))
+        stringLen += format(keySpaceName.length)
+        tableName = bufferToString(buf.slice(stringLen))
+        stringLen += format(tableName.length)
+    }
+
+    let columnVars : any = Array.from({length: columnCount})
+    for (let i = 0; i < columnCount; ++i) {
+        if (!globalTableSpecPresent) {
+            keySpaceName = bufferToString(buf.slice(stringLen))
+            stringLen += format(keySpaceName.length)
+            tableName = bufferToString(buf.slice(stringLen))
+            stringLen += format(tableName.length)
+        }
+
+        let columnName = bufferToString(buf.slice(stringLen))
+        columnVars[i].name = columnName
+        stringLen += format(columnName.length)
+        let type = bufferToOption(buf.slice(stringLen))
+        columnVars[i].type = type
+        stringLen += type.size
+    }
+
+    const rowCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
+    let rows : any[] = Array.from({length: rowCount})
+    for (let i = 0; i < rowCount; ++i) {
+        let row : any = Array.from({length: columnCount})
+        for (let j = 0; j < columnCount; ++j) {
+            row[j] = bufferToBytes(buf.slice(stringLen))
+            stringLen += 4
+            if (row[j] != null) {
+                stringLen += format(row[j].length)
+            }
+        }
+        rows[i] = row
+    }
+
+    let result = ""
+
+    for (let i = 0; i < columnCount; ++i) {
+        result += columnVars[i].name.string.toString() + " ";
+    }
+    result += "\n"
+
+    /*for (let i = 0; i < rowCount; ++i) {
+        for (let j = 0; j < columnCount; ++j) {
+            result += optionToReadableString(columnVars[i].type, rows[i][j])
+        }
+    }*/
+
+    return result
 }
 
 const getSetKeyspaceResult = (buf : Buffer) : string => {
@@ -52,10 +128,7 @@ const getSchemaChangeResult = (buf : Buffer) => {
 }
 
 const getQueryResult = (buffer: Buffer) : string => {
-    const opcode = getOpcode(buffer);
-    if (opcode != getMessageCode("RESULT")) {
-        return "Invalid opcode received: " + opcode.toString();
-    }
+
     console.log(buffer)
     const length = getLength(buffer)
     console.log(length)
@@ -81,7 +154,7 @@ const getQueryResult = (buffer: Buffer) : string => {
         }
     }
 
-    return "Invalid body code"
+    return "Invalid body code" + body.toString()
 }
 
 export default getQueryResult;
