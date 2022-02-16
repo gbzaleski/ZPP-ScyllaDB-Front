@@ -1,5 +1,5 @@
 import {Blob, Buffer} from 'buffer';
-import {bufferToBytes, bufferToInt} from "../utils/conversions";
+import {bufferToBytes, bufferToInt, numberToInt} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
 
@@ -111,7 +111,7 @@ export class FLOAT implements type {
     }
 }
 export class INET implements type {
-    address : Buffer = new Buffer("")
+    address : Buffer = Buffer.from("")
 
     constructor(data: Buffer) {
         this.address = data
@@ -126,11 +126,11 @@ export class INT implements type {
     value : number = 0
 
     constructor(data: Buffer) {
-        this.value = data.readInt32BE()
+        this.value = data.readInt32BE(0)
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 
@@ -145,24 +145,63 @@ export class LIST implements type {
             let bytes = bufferToBytes(data);
             if (bytes != null) {
                 this.list[i] = getTypeFrom(value, bytes.bytes);
+                data = data.slice(bytes.bytes.length + 4)
             }
         }
     }
 
     toString() {
-        return ""
+        return this.list.toString()
     }
 }
 
-class MAP implements type {
+export class MAP implements type {
+    container : Array<[type | null, type | null]> = new Array<[type | null, type | null]>()
+
+    constructor(data: Buffer, value : any) {
+        const [firstVal, secondVal] = value
+        const n = data.readInt32BE(0)
+        data = data.slice(4)
+        this.container = Array.from({length: n})
+        for (let i = 0; i < n; ++i) {
+            this.container[i] = [null, null]
+            let bytes = bufferToBytes(data);
+            if (bytes != null) {
+                this.container[i][0] = getTypeFrom(firstVal, bytes.bytes);
+                data = data.slice(bytes.bytes.length + 4)
+            }
+
+            bytes = bufferToBytes(data);
+            if (bytes != null) {
+                this.container[i][1] = getTypeFrom(secondVal, bytes.bytes);
+                data = data.slice(bytes.bytes.length + 4)
+            }
+        }
+    }
+
     toString() {
-        return ""
+        return this.container.toString()
     }
 }
 
-class SET implements type {
+export class SET implements type {
+    list : Array<type | null> = new Array<type | null>()
+
+    constructor(data: Buffer, value : any) {
+        const n = data.readInt32BE(0)
+        data = data.slice(4)
+        this.list = Array.from({length: n})
+        for (let i = 0; i < n; ++i) {
+            let bytes = bufferToBytes(data);
+            if (bytes != null) {
+                this.list[i] = getTypeFrom(value, bytes.bytes);
+                data = data.slice(bytes.bytes.length + 4)
+            }
+        }
+    }
+
     toString() {
-        return ""
+        return this.list.toString()
     }
 }
 
@@ -179,8 +218,14 @@ export class SMALLINT implements type {
 }
 
 class TEXT implements type {
+   #value : string = ""
+
+    constructor(data: Buffer) {
+        this.#value = data.toString('utf8')
+    }
+
     toString() {
-        return ""
+        return this.#value
     }
 }
 
@@ -220,9 +265,15 @@ class UUID implements type {
     }
 }
 
-class VARCHAR implements type {
+export class VARCHAR implements type {
+    #value : string = ""
+
+    constructor(data: Buffer) {
+        this.#value = data.toString('utf8')
+    }
+
     toString() {
-        return ""
+        return this.#value
     }
 }
 

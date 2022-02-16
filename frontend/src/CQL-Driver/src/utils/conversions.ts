@@ -34,17 +34,19 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
     const id = bufferToShort(buf);
     let stringLen = 2
     const idVal = format(id.short)
+    let size = 0
     let value = null
-    /*
 
     if (idVal == 0) {
         value = bufferToString(buf.slice(stringLen))
     } else if (idVal == 32 || idVal == 34) {
         value = bufferToOption(buf.slice(stringLen))
+        size += value.size + 2
     } else if (idVal == 33) {
         const fst = bufferToOption(buf.slice(stringLen))
         stringLen += fst.size
         const snd = (bufferToOption(buf.slice(stringLen)))
+        size += fst.size + snd.size + 4
         value = [fst, snd]
 
     } else if (idVal == 48) {
@@ -78,8 +80,8 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
         }
         value = optionList
     }
-    */
-    return {id: id, value : value, size: 0}
+    
+    return {id: id, value : value, size: size}
 }
 
 export const bufferToString = (buf : Buffer) : String => {

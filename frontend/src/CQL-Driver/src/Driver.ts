@@ -16,7 +16,7 @@ class CQLDriver {
     constructor() {
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
-        this.#pageSize = 1
+        this.#pageSize = 100
         this.#pagingEnabled = true
         this.#nextPageData = bufferToBytes(Buffer.from(""))
         this.#hasMorePages = false

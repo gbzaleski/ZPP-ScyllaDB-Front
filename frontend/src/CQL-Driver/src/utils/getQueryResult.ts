@@ -10,6 +10,7 @@ import {
 import getLength from "./getLength";
 import { getOpcodeName } from "./getOpcode";
 import {type} from "../cql-types/types";
+import { getTypeFrom } from "../cql-types/typeFactory";
 const format = require("biguint-format");
 
 const getVoidResult = () : string => {
@@ -75,9 +76,11 @@ const getRowsResult = (driver : any, buf : Buffer) : string => {
     
 
     let columnVars : any = Array.from({length: columnCount})
+
+    console.log(columnCount)
+
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
-            console.log("XD")
             keySpaceName = bufferToString(buf.slice(stringLen))
             stringLen += Number(format(keySpaceName.length.short)) + 2
             tableName = bufferToString(buf.slice(stringLen))
@@ -85,11 +88,12 @@ const getRowsResult = (driver : any, buf : Buffer) : string => {
         }
         
         let columnName = bufferToString(buf.slice(stringLen))
-        console.log(columnName.string)
+        console.log(columnName.string.toString())
         stringLen += Number(format(columnName.length.short)) + 2
         let columnType = bufferToOption(buf.slice(stringLen))
         console.log(format(columnType.id.short))
         columnVars[i] = {name: columnName, type: columnType}
+        console.log(columnType)
         stringLen += columnType.size + 2
     }
     
@@ -120,16 +124,17 @@ const getRowsResult = (driver : any, buf : Buffer) : string => {
 
     let content : Array<Array<type | null>> = Array.from({length: rowCount})
 
-    for (let i = 0; i < rowCount; ++i) {
-        content[i] = Array.from({length: columnCount})
-        for (let j = 0; j < columnCount; ++j) {
-            //console.log(columnVars[j].type)
-            //content[i][j] = getTypeFrom(Number(format(columnVars[j].type)), rows[i][j].bytes)
+    console.log(rowCount, columnCount)
+    for (let i = 0; i < columnCount; ++i) {
+        content[i] = Array.from({length: rowCount})
+        for (let j = 0; j < rowCount; ++j) {
+            //console.log(columnVars[i].type)
+            content[i][j] = getTypeFrom(columnVars[i].type, rows[j][i].bytes)
         }
     }
 
     const resultTable = new RowTable(columnCount, rowCount, content)
-    console.log(resultTable.content)
+    //console.log(resultTable.content[1].toString())
     return result
 }
 

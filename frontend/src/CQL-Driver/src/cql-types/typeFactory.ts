@@ -1,8 +1,10 @@
-import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT, INT, type, LIST} from "./types";
+import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT,
+        SET, INT, type, LIST, MAP, VARCHAR} from "./types";
+const format = require("biguint-format");
 
 export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
-    const id = type.id
-    const value = type.val
+    const id = Number(format(type.id.short))
+    const value = type.value
 
     switch (id) {
         case 1: {
@@ -32,8 +34,17 @@ export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
         case 9: {
             return new INT(data)
         }
+        case 13: {
+            return new VARCHAR(data)
+        }
         case 32 : {
             return new LIST(data, value)
+        }
+        case 33: {
+            return new MAP(data, value)
+        }
+        case 34: {
+            return new SET(data, value)
         }
     }
     return null;
