@@ -1,11 +1,12 @@
 import {Blob} from 'buffer';
+import {bufferToInt} from "../utils/conversions";
 const format = require("biguint-format");
 
 export interface type {
     toString() : string;
 }
 
-class ASCII implements type {
+export class ASCII implements type {
     validationError : boolean = false;
     asciiText : string = ""
 
@@ -58,43 +59,85 @@ export class BLOB implements type {
     }
 }
 
-class BOOLEAN implements type {
+export class BOOLEAN implements type {
+    value : boolean = false
+    constructor(data: Buffer) {
+        if (data.length && data[0] > 0) {
+            this.value = true;
+        }
+    }
+
     toString() {
         return ""
     }
 }
 
-class DATE implements type {
+export class COUNTER implements type {
+    constructor(data: Buffer) {
+
+    }
+
     toString() {
         return ""
     }
 }
 
-class DECIMAL implements type {
+// Number represented as unscaled * 10 ^ scale
+export class DECIMAL implements type {
+    scale = 0n
+    unscaled = 0n
+    constructor(data: Buffer) {
+        this.scale = BigInt(format(data.slice(0, 4)))
+        this.unscaled = BigInt(format(data.slice(4)))
+    }
+
     toString() {
         return ""
     }
 }
 
-class DOUBLE implements type {
+export class DOUBLE implements type {
+    value : number
+    constructor(data: Buffer) {
+        this.value = data.readDoubleLE()
+    }
+
     toString() {
         return ""
     }
 }
 
-class FLOAT implements type {
+export class FLOAT implements type {
+    value : number
+    constructor(data: Buffer) {
+        this.value = data.readFloatLE()
+    }
+
     toString() {
         return ""
     }
 }
 
-class INET implements type {
+export class INET implements type {
     toString() {
         return ""
     }
 }
 
-class INT implements type {
+export class INT implements type {
+    value : bigint = 0n
+
+    constructor(data: Buffer) {
+        data = data.slice(0, 4)
+        const val = BigInt(format(data))
+
+        if ((val & (1n << 31n)) != 0n) {
+            const bound = (1n << 32n);
+            this.value = -bound + (val & (bound - 1n))
+        } else {
+            this.value = val
+        }
+    }
     toString() {
         return ""
     }

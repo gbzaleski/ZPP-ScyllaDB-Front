@@ -9,10 +9,25 @@ import {
 } from "./conversions";
 import getLength from "./getLength";
 import { getOpcode, getOpcodeName } from "./getOpcode";
+import {type} from "../cql-types/types";
+import {getTypeFrom} from "../cql-types/typeFactory";
 const format = require("biguint-format");
 
 const getVoidResult = () : string => {
     return ""
+}
+
+class RowTable {
+    columns: number = 0
+    rows: number = 0
+
+    content : Array<Array<type | null>> = []
+
+    constructor(col: number, rows : number, con : Array<Array<type | null>>) {
+        this.columns = col;
+        this.rows = rows;
+        this.content = con;
+    }
 }
 
 const getRowsResult = (buf : Buffer) : string => {
@@ -87,12 +102,16 @@ const getRowsResult = (buf : Buffer) : string => {
     }
     result += "\n"
 
+    let content : Array<Array<type | null>> = []
+
     for (let i = 0; i < rowCount; ++i) {
         for (let j = 0; j < columnCount; ++j) {
-            result += optionToReadableString(columnVars[j].type.id, rows[i][j])
+            content[i][j] = getTypeFrom(Number(format(columnVars[j].type.id)), rows[i][j])
         }
     }
 
+    const resultTable = new RowTable(columnCount, rowCount, content)
+    console.log(resultTable.content)
     return result
 }
 
