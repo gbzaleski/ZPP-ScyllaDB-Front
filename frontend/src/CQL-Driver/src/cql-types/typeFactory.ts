@@ -1,4 +1,4 @@
-import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT, INT, type} from "./types";
+import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT, INT, type, LIST} from "./types";
 
 export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
     const id = type.id
@@ -33,7 +33,7 @@ export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
             return new INT(data)
         }
         case 32 : {
-            return new LIST(data, value)
+            return new LIST()
         }
     }
     return null;
