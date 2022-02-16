@@ -8,9 +8,8 @@ import {
     optionToReadableString
 } from "./conversions";
 import getLength from "./getLength";
-import { getOpcode, getOpcodeName } from "./getOpcode";
+import { getOpcodeName } from "./getOpcode";
 import {type} from "../cql-types/types";
-import {getTypeFrom} from "../cql-types/typeFactory";
 const format = require("biguint-format");
 
 const getVoidResult = () : string => {
@@ -30,7 +29,7 @@ class RowTable {
     }
 }
 
-const getRowsResult = (buf : Buffer) : string => {
+const getRowsResult = (driver : any, buf : Buffer) : string => {
     console.log(buf)
     let stringLen = 0
     let globalTableSpecPresent = false
@@ -50,6 +49,22 @@ const getRowsResult = (buf : Buffer) : string => {
     stringLen += 4
     const columnCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
     stringLen += 4
+
+    if (hasMorePages) {
+        const nextPageData = bufferToBytes(buf.slice(stringLen))
+        if (nextPageData != null) {
+            stringLen += nextPageData.bytes.length;
+            driver.setNextPageData(true, nextPageData)
+        } else {
+            // 4 bytes length
+            stringLen += 4
+            driver.setNextPageData(false, nextPageData)
+        }
+       
+    } else {
+        driver.setNextPageData(false)
+    }
+
     let keySpaceName, tableName
     if (globalTableSpecPresent) {
         keySpaceName = bufferToString(buf.slice(stringLen))
@@ -57,7 +72,8 @@ const getRowsResult = (buf : Buffer) : string => {
         tableName = bufferToString(buf.slice(stringLen))
         stringLen += Number(format(tableName.length))
     }
-    console.log(globalTableSpecPresent)
+    
+
     let columnVars : any = Array.from({length: columnCount})
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
@@ -159,7 +175,7 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
     return changeType + " " + target + " " + option
 }
 
-const getQueryResult = (buffer: Buffer, setKeyspace: any) : string => {
+const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string => {
 
     console.log(buffer)
     const length = getLength(buffer)
@@ -175,7 +191,7 @@ const getQueryResult = (buffer: Buffer, setKeyspace: any) : string => {
             }
             case 2: {
                 //return "Rows";
-                return getRowsResult(body.slice(4, Number(length)))
+                return getRowsResult(driver, body.slice(4, Number(length)))
             }
             case 3: {
                 return getSetKeyspaceResult(body.slice(4, Number(length)), setKeyspace);
