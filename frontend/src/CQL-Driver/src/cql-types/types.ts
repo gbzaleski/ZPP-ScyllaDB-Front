@@ -1,4 +1,7 @@
-interface type {
+import {Blob} from 'buffer';
+const format = require("biguint-format");
+
+export interface type {
     toString() : string;
 }
 
@@ -7,7 +10,7 @@ class ASCII implements type {
     asciiText : string = ""
 
     constructor(data: Buffer) {
-        for (var pair of data.entries()) {
+        for (let pair of data.entries()) {
             if (pair[1] > 127) {
                 this.validationError = true;
                 break;
@@ -21,14 +24,19 @@ class ASCII implements type {
     }
 }
 
-class BIGINT implements type {
+// 8 Byte signed long
+export class BIGINT implements type {
     value : bigint = 0n
 
     constructor(data: Buffer) {
-        var mult = 1n
-        for (var pair of data.reverse().entries()) {
-           this.value += BigInt(pair[1]) * mult;
-           mult *= 256n;
+        data = data.slice(0, 8)
+        const val = BigInt(format(data))
+
+        if ((val & (1n << 63n)) != 0n) {
+            const bound = (1n << 64n);
+            this.value = -bound + (val & (bound - 1n))
+        } else {
+            this.value = val
         }
     }
 
@@ -37,7 +45,14 @@ class BIGINT implements type {
     }
 }
 
-class BLOB implements type {
+// Blob is just a sequence of bytes
+export class BLOB implements type {
+    value: Blob = new Blob([""]);
+     
+    constructor(data : Buffer) {
+        this.value =  new Blob([new Uint8Array(data)])
+    }
+
     toString() {
         return ""
     }
