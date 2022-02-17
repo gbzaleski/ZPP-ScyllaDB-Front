@@ -32,10 +32,11 @@ const getQueryMessage = (driver: any, body: string) : Buffer => {
         extraData = Buffer.concat([extraData, nextPageData.bytes])
     }
 
-    // Basic query - long string(int) + consistency(short) + flag(byte) + possible data
-    const length = BigInt(body.length + 7 + extraData.length)
+    // Basic query - long string(int) + consistency(short) + flag(byte) + possible data    
+    const queryBody = Buffer.from(body, 'utf-8');
+    const length = BigInt(queryBody.length + 7 + extraData.length)
     setLength(buffer, length)
-    buffer = addQueryBody(buffer, body, consistency,  numberToByte(flagValue), Number(length), extraData)
+    buffer = addQueryBody(buffer, queryBody, consistency,  numberToByte(flagValue), Number(length), extraData)
 
     return buffer;
 }

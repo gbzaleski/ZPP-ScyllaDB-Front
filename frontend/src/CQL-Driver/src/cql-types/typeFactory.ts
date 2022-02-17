@@ -1,5 +1,6 @@
+import { updateNonNullExpression } from "typescript";
 import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT,
-        SET, INT, type, LIST, MAP, VARCHAR} from "./types";
+        SET, INT, type, LIST, MAP, VARCHAR, UUID, TUPLE} from "./types";
 const format = require("biguint-format");
 
 export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
@@ -34,6 +35,9 @@ export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
         case 9: {
             return new INT(data)
         }
+        case 12: {
+            return new UUID(data)
+        }
         case 13: {
             return new VARCHAR(data)
         }
@@ -45,6 +49,9 @@ export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
         }
         case 34: {
             return new SET(data, value)
+        }
+        case 49: {
+            return new TUPLE(data, value)
         }
     }
     return null;
