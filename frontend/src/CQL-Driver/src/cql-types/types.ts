@@ -1,5 +1,6 @@
 import {Blob, Buffer} from 'buffer';
-import {bufferToInt} from "../utils/conversions";
+import {bufferToBytes, bufferToInt} from "../utils/conversions";
+import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
 
 export interface type {
@@ -30,15 +31,7 @@ export class BIGINT implements type {
     value : bigint = 0n
 
     constructor(data: Buffer) {
-        data = data.slice(0, 8)
-        const val = BigInt(format(data))
-
-        if ((val & (1n << 63n)) != 0n) {
-            const bound = (1n << 64n);
-            this.value = -bound + (val & (bound - 1n))
-        } else {
-            this.value = val
-        }
+        this.value = data.readBigInt64BE();
     }
 
     toString() {
@@ -117,33 +110,45 @@ export class FLOAT implements type {
         return ""
     }
 }
-
 export class INET implements type {
+    address : Buffer = new Buffer("")
+
+    constructor(data: Buffer) {
+        this.address = data
+    }
+
     toString() {
         return ""
     }
 }
 
 export class INT implements type {
-    value : bigint = 0n
+    value : number = 0
 
     constructor(data: Buffer) {
-        data = data.slice(0, 4)
-        const val = BigInt(format(data))
-
-        if ((val & (1n << 31n)) != 0n) {
-            const bound = (1n << 32n);
-            this.value = -bound + (val & (bound - 1n))
-        } else {
-            this.value = val
-        }
+        this.value = data.readInt32BE()
     }
+
     toString() {
         return ""
     }
 }
 
 class LIST implements type {
+    list : Array<type | null> = new Array<type | null>()
+
+    constructor(data: Buffer, value : any) {
+        const n = data.readInt32BE(0)
+        data = data.slice(4)
+        this.list = Array.from({length: n})
+        for (let i = 0; i < n; ++i) {
+            let bytes = bufferToBytes(data);
+            if (bytes != null) {
+                this.list[i] = getTypeFrom(value, bytes.bytes);
+            }
+        }
+    }
+
     toString() {
         return ""
     }
@@ -156,6 +161,18 @@ class MAP implements type {
 }
 
 class SET implements type {
+    toString() {
+        return ""
+    }
+}
+
+export class SMALLINT implements type {
+    value : number = 0
+
+    constructor(data: Buffer) {
+        this.value = data.readInt16BE()
+    }
+
     toString() {
         return ""
     }
@@ -180,6 +197,12 @@ class TIMESTAMP implements type {
 }
 
 class TINYINT implements type {
+    value : number = 0
+
+    constructor(data: Buffer) {
+        this.value = data.readInt8()
+    }
+
     toString() {
         return ""
     }
@@ -203,7 +226,7 @@ class VARCHAR implements type {
     }
 }
 
-class VARINT implements type {
+export class VARINT implements type {
     toString() {
         return ""
     }

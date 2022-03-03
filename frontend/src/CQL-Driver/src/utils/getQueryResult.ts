@@ -108,7 +108,7 @@ const getRowsResult = (buf : Buffer) : string => {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
             //console.log(columnVars[j].type)
-            content[i][j] = getTypeFrom(Number(format(columnVars[j].type.id.short)), rows[i][j].bytes)
+            content[i][j] = getTypeFrom(Number(format(columnVars[j].type)), rows[i][j].bytes)
         }
     }
 

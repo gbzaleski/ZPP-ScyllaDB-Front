@@ -1,8 +1,9 @@
 import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT, INT, type} from "./types";
 
-export const getTypeFrom = (id: number, data: Buffer) : type | null =>  {
-    console.log(id)
-    console.log(typeof data)
+export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
+    const id = type.id
+    const value = type.val
+
     switch (id) {
         case 1: {
             return new ASCII(data);
@@ -23,7 +24,6 @@ export const getTypeFrom = (id: number, data: Buffer) : type | null =>  {
             return new DECIMAL(data)
         }
         case 7: {
-            console.log(typeof data)
             return new DOUBLE(data)
         }
         case 8: {
@@ -31,6 +31,9 @@ export const getTypeFrom = (id: number, data: Buffer) : type | null =>  {
         }
         case 9: {
             return new INT(data)
+        }
+        case 32 : {
+            return new LIST(data, value)
         }
     }
     return null;
