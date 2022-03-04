@@ -3,8 +3,12 @@ import {makeStyles} from "@material-ui/core/styles";
 
 interface InputProps {
     value: string;
+<<<<<<< HEAD
     keyspaceName: string;
     changeValue: (event: React.ChangeEvent<HTMLInputElement>) => void;
+=======
+    changeValue: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
+>>>>>>> multi-line-commands
 }
 
 const Input = ({value, keyspaceName, changeValue}: InputProps) => {
@@ -24,13 +28,11 @@ const Input = ({value, keyspaceName, changeValue}: InputProps) => {
                 <div className={classes.terminalSign}>
                     {'>'}
                 </div>
-                    <input
-                        className={classes.inputContainer}
-                        type="text"
-                        value={value}
-                        onChange={changeValue}
-                    />
-                </div>
+                <textarea
+                    className={classes.inputContainer}
+                    value={value}
+                    onChange={changeValue}
+                />
             </div>
         </div>
     );
