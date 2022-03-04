@@ -3,12 +3,8 @@ import {makeStyles} from "@material-ui/core/styles";
 
 interface InputProps {
     value: string;
-<<<<<<< HEAD
     keyspaceName: string;
-    changeValue: (event: React.ChangeEvent<HTMLInputElement>) => void;
-=======
     changeValue: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
->>>>>>> multi-line-commands
 }
 
 const Input = ({value, keyspaceName, changeValue}: InputProps) => {
