@@ -139,7 +139,7 @@ const Terminal = () => {
             <TerminalHistory
                 history={commandHistory}
             />
-            <Input value={command} changeValue={changeCommand}/>
+            <Input value={command} keyspaceName={driver.getKeyspace()} changeValue={changeCommand}/>
              <ServerResponse
                 websocket={webSocket}
                 response={serverResponse}

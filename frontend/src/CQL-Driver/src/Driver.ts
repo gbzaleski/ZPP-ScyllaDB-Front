@@ -7,9 +7,11 @@ import getQueryResult from "./utils/getQueryResult";
 
 class CQLDriver {
     #consistency: Consistency
+    #keyspace : string
 
     constructor() {
         this.#consistency = getConsistency("ONE");
+        this.#keyspace = ""
     }
 
     handshake = handshakeMessage.bind(this)
@@ -26,12 +28,21 @@ class CQLDriver {
         }
         return -1
     }
+
+    #setKeyspace = (keyspace : string) => {
+        this.#keyspace = keyspace
+    }
+
+    getKeyspace = () : string => {
+        return this.#keyspace
+    }
+
     getConsistency = () : string => {
         return this.#consistency.name
     }
 
     getResponse = (buf: Buffer) => {
-        return getQueryResult(buf)
+        return getQueryResult(buf, this.#setKeyspace)
     }
 }
 

@@ -33,7 +33,7 @@ export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
             return new INT(data)
         }
         case 32 : {
-            return new LIST()
+            return new LIST(data, value)
         }
     }
     return null;

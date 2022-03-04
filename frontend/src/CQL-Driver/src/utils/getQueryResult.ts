@@ -108,7 +108,7 @@ const getRowsResult = (buf : Buffer) : string => {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
             //console.log(columnVars[j].type)
-            content[i][j] = getTypeFrom(Number(format(columnVars[j].type)), rows[i][j].bytes)
+            //content[i][j] = getTypeFrom(Number(format(columnVars[j].type)), rows[i][j].bytes)
         }
     }
 
@@ -117,8 +117,11 @@ const getRowsResult = (buf : Buffer) : string => {
     return result
 }
 
-const getSetKeyspaceResult = (buf : Buffer) : string => {
-    return bufferToString(buf).string.toString()
+const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void) : string => {
+    const keyspaceName =  bufferToString(buf).string.toString()
+    setKeyspace(keyspaceName)
+    const response = "Changed keyspace to " + keyspaceName
+    return response
 }
 
 const getPreparedResult = () => {
@@ -156,7 +159,7 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
     return changeType + " " + target + " " + option
 }
 
-const getQueryResult = (buffer: Buffer) : string => {
+const getQueryResult = (buffer: Buffer, setKeyspace: any) : string => {
 
     console.log(buffer)
     const length = getLength(buffer)
@@ -175,7 +178,7 @@ const getQueryResult = (buffer: Buffer) : string => {
                 return getRowsResult(body.slice(4, Number(length)))
             }
             case 3: {
-                return getSetKeyspaceResult(body.slice(4, Number(length)));
+                return getSetKeyspaceResult(body.slice(4, Number(length)), setKeyspace);
             }
             case 4: {
                 return "Prepared";
