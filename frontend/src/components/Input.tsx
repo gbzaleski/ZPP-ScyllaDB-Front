@@ -20,7 +20,6 @@ const Input = ({value, keyspaceName, changeValue}: InputProps) => {
                 <div>
                     {keyspaceName}
                 </div>
-                <div>
                 <div className={classes.terminalSign}>
                     {'>'}
                 </div>
