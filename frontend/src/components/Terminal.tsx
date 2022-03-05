@@ -56,7 +56,7 @@ const Terminal = () => {
     // Updating command history in the localStorage
     useEffect(() => {
         window.localStorage.setItem('commandHistory', JSON.stringify(commandHistory));
-        window.sessionStorage.setItem('consistency', driver.getConsistency())
+        window.sessionStorage.setItem('consistency', driver.getConsistencyName())
     }, [commandHistory, driver]);
 
     // Creating keylogger
