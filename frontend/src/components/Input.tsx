@@ -14,12 +14,9 @@ const Input = ({value, keyspaceName, changeValue}: InputProps) => {
         <div>
             <hr/>
             <div className={classes.lineContainer}>
-                Input
+                Input: ~/{keyspaceName}{keyspaceName ? "/" : ""}
             </div>
             <div className={classes.lineContainer}>
-                <div>
-                    {keyspaceName}
-                </div>
                 <div className={classes.terminalSign}>
                     {'>'}
                 </div>
@@ -27,6 +24,7 @@ const Input = ({value, keyspaceName, changeValue}: InputProps) => {
                     className={classes.inputContainer}
                     value={value}
                     onChange={changeValue}
+                    id={"inputTextArea"}
                 />
             </div>
         </div>

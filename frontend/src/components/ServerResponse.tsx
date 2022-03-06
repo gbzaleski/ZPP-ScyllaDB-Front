@@ -1,14 +1,17 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useState} from "react";
 import {makeStyles} from "@material-ui/core/styles";
+import TableDisplayer from "./TableDisplayer";
 
 interface ServerResponseProps {
     driver: any;
     websocket: any;
     response: string;
-    setResponse: (s: string) => void
+    setResponse: (s: string) => void;
+    tableResponse: string[][];
+    setTableResponse: (s: string[][]) => void
 }
 
-const ServerResponse = ({driver, websocket, response, setResponse} : ServerResponseProps) => {
+const ServerResponse = ({driver, websocket, response, setResponse, tableResponse, setTableResponse} : ServerResponseProps) => {
     const classes = useStyles();
 
     useEffect(() => {
@@ -28,7 +31,11 @@ const ServerResponse = ({driver, websocket, response, setResponse} : ServerRespo
 
         // Listen for messages
         websocket.current.addEventListener('message', function (event: any) {
+
             event.data.arrayBuffer().then((response: any) => setResponse(driver.getResponse(Buffer.from(response))))
+
+            // TODO: Parsing response for table or just string and then executing respective setState.
+
            // console.log('Message from server ', Buffer.from(event.data.arrayBuffer()));
            //console.log('Message from server ', event.data.json());
         });
@@ -40,14 +47,20 @@ const ServerResponse = ({driver, websocket, response, setResponse} : ServerRespo
             <div className={classes.lineContainer}>
                 Response
             </div>
-            <div className={classes.lineContainer}>
-                <div className={classes.terminalSign}>
-                    {'>'}
-                </div>
-                <div className={classes.inputContainer}>
-                    {response}
-                </div>
-            </div>
+            {tableResponse && tableResponse.length && tableResponse[0].length ?
+                <TableDisplayer
+                    headers = {tableResponse[0]}
+                    data = {tableResponse.slice(1)}
+                />
+            :   
+            (<div className={classes.lineContainer}>
+                    <div className={classes.terminalSign}>
+                        {'>'}
+                    </div>
+                    <div className={classes.inputContainer}>
+                        {response}
+                    </div>
+                </div>)}
             <hr/>
         </div>
     )
