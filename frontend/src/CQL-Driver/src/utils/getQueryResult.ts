@@ -30,8 +30,8 @@ class RowTable {
     }
 }
 
-const getRowsResult = (driver : any, buf : Buffer) : string => {
-    console.log(buf)
+const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<string>> => {
+    //console.log(buf)
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -77,8 +77,6 @@ const getRowsResult = (driver : any, buf : Buffer) : string => {
 
     let columnVars : any = Array.from({length: columnCount})
 
-    console.log(columnCount)
-
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
             keySpaceName = bufferToString(buf.slice(stringLen))
@@ -88,24 +86,24 @@ const getRowsResult = (driver : any, buf : Buffer) : string => {
         }
         
         let columnName = bufferToString(buf.slice(stringLen))
-        console.log(columnName.string.toString())
+        //console.log(columnName.string.toString())
         stringLen += Number(format(columnName.length.short)) + 2
         let columnType = bufferToOption(buf.slice(stringLen))
         console.log(format(columnType.id.short))
         columnVars[i] = {name: columnName, type: columnType}
-        console.log(columnType)
+        //console.log(columnType)
         stringLen += columnType.size + 2
     }
     
     const rowCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
-    console.log(rowCount)
+    //console.log(rowCount)
     stringLen += 4
     let rows : any[] = Array.from({length: rowCount})
     for (let i = 0; i < rowCount; ++i) {
         let row : any = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
             row[j] = bufferToBytes(buf.slice(stringLen))
-            console.log(row[j])
+            //console.log(row[j])
             stringLen += 4
             if (row[j] != null) {
                 stringLen += Number(format(row[j].length.int))
@@ -113,29 +111,31 @@ const getRowsResult = (driver : any, buf : Buffer) : string => {
         }
         rows[i] = row
     }
-    
-    let result = ""
-    console.log(columnCount)
-    for (let i = 0; i < columnCount; ++i) {
-        console.log(columnVars[i])
-        result += columnVars[i].name.string.toString() + " ";
+   
+    let content : Array<Array<string>> = Array.from({length: rowCount + 1})
+  
+    content[0] = Array.from({length: columnCount})
+    for (let j = 0; j < columnCount; ++j) {
+        content[0][j] = columnVars[j].name.string.toString()
     }
-    result += "\n"
-
-    let content : Array<Array<type | null>> = Array.from({length: rowCount})
-
+    
     console.log(rowCount, columnCount)
-    for (let i = 0; i < columnCount; ++i) {
-        content[i] = Array.from({length: rowCount})
-        for (let j = 0; j < rowCount; ++j) {
-            //console.log(columnVars[i].type)
-            content[i][j] = getTypeFrom(columnVars[i].type, rows[j][i].bytes)
+    for (let i = 1; i <= rowCount; ++i) {
+        content[i] = Array.from({length: columnCount})
+        for (let j = 0; j < columnCount; ++j) {
+            console.log(format(columnVars[j].type.id.short))
+            console.log(rows[i - 1][j].bytes)
+            const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
+            //content[i] = 
+            if (receivedType != null) {
+                content[i][j] = receivedType.toString()
+            } else {
+                content[i][j] = "null"
+            }
         }
     }
 
-    const resultTable = new RowTable(columnCount, rowCount, content)
-    //console.log(resultTable.content[1].toString())
-    return result
+    return content
 }
 
 const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void) : string => {
@@ -180,7 +180,7 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
     return changeType + " " + target + " " + option
 }
 
-const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string => {
+const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string | Array<Array<string>> => {
 
     console.log(buffer)
     const length = getLength(buffer)

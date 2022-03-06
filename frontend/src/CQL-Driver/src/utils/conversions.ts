@@ -1,10 +1,6 @@
 import { Buffer } from 'buffer';
-import {Byte, Int, Long, Short, String, StringList, Uuid, Option, Bytes} from "./types";
+import {Byte, Int, Long, Short, String, StringList, Option, Bytes} from "./types";
 const format = require("biguint-format");
-
-export const numberToUuid = (value : bigint) : Uuid => {
-    return {uuid: bigIntToBuffer(value, 16)}
-}
 
 export const numberToLong = (value: bigint) : Long => {
     return {long: bigIntToBuffer(value, 8)}
@@ -70,13 +66,18 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
 
     } else if (idVal == 49) {
         const n = format(bufferToShort(buf.slice(stringLen)).short)
-
+    
         stringLen += 2
+        size += 2
 
         let optionList : any[] = Array.from({length: n})
+       
         for (let i = 0; i < n; ++i ) {
+            console.log(buf.slice(stringLen))
             optionList[i] = bufferToOption(buf.slice(stringLen))
-            stringLen += optionList[i].size
+            console.log(optionList[i])
+            stringLen += optionList[i].size + 2
+            size += optionList[i].size + 2
         }
         value = optionList
     }

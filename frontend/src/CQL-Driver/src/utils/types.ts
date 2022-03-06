@@ -14,10 +14,6 @@ export type Long = {
     long: Buffer
 };
 
-export type Uuid = {
-    uuid: Buffer
-};
-
 export type Consistency = {
     consistency: Short,
     name : string

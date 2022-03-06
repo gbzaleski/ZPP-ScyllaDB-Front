@@ -2,6 +2,7 @@ import {Blob, Buffer} from 'buffer';
 import {bufferToBytes, bufferToInt, numberToInt} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
+import {stringify} from 'uuid'
 
 export interface type {
     toString() : string;
@@ -61,7 +62,7 @@ export class BOOLEAN implements type {
     }
 
     toString() {
-        return ""
+        return this.value ? "True" : "False"
     }
 }
 
@@ -160,27 +161,39 @@ export class MAP implements type {
 
     constructor(data: Buffer, value : any) {
         const [firstVal, secondVal] = value
+        console.log(firstVal, secondVal)
         const n = data.readInt32BE(0)
-        data = data.slice(4)
+        let dataPart = data.slice(4)
         this.container = Array.from({length: n})
         for (let i = 0; i < n; ++i) {
-            this.container[i] = [null, null]
-            let bytes = bufferToBytes(data);
+            this.container[i] = [null, dataPart]
+            let bytes = bufferToBytes(dataPart);
+        
             if (bytes != null) {
                 this.container[i][0] = getTypeFrom(firstVal, bytes.bytes);
-                data = data.slice(bytes.bytes.length + 4)
+                dataPart = dataPart.slice(bytes.bytes.length + 4)
+ 
             }
-
-            bytes = bufferToBytes(data);
+            
+            bytes = bufferToBytes(dataPart);
             if (bytes != null) {
                 this.container[i][1] = getTypeFrom(secondVal, bytes.bytes);
-                data = data.slice(bytes.bytes.length + 4)
+                dataPart = dataPart.slice(bytes.bytes.length + 4)
             }
         }
     }
 
     toString() {
-        return this.container.toString()
+        let resultString = "{"
+        for (let i = 0; i < this.container.length; ++i) {
+            const [key, value] = this.container[i]
+            if (key != null) {console.log(key.toString())}
+            const keyString = key != null ? key.toString() : "null"
+            const valueString =value != null ? value.toString() : "null"
+            resultString += keyString + " : " + valueString + ", "
+        }
+        resultString = resultString.replace(/..$/,"}")
+        return resultString
     }
 }
 
@@ -253,15 +266,44 @@ class TINYINT implements type {
     }
 }
 
-class TUPLE implements type {
+export class TUPLE implements type {
+    tuple : Array<type | null> = new Array<type | null>()
+
+    constructor(data: Buffer, value : any) {
+        const n = value.length
+        this.tuple = Array.from({length: n})
+        for (let i = 0; i < n; ++i) {
+            let bytes = bufferToBytes(data);
+            if (bytes != null) {
+                console.log(value[i])
+                this.tuple[i] = getTypeFrom(value[i], bytes.bytes);
+                data = data.slice(bytes.bytes.length + 4)
+            }
+        }
+    }
+
     toString() {
-        return ""
+        let resultString = "("
+        for (let i = 0; i < this.tuple.length; ++i) {
+            const tupleValue = this.tuple[i]
+            const stringValue = tupleValue != null ? tupleValue.toString() : "null"
+           
+            resultString += stringValue + ", "
+        }
+        resultString = resultString.replace(/..$/,")")
+        return resultString
     }
 }
 
-class UUID implements type {
+export class UUID implements type {
+    #value : string = ""
+
+    constructor(data: Buffer) {
+        this.#value = stringify(data)
+    }
+
     toString() {
-        return ""
+        return this.#value
     }
 }
 

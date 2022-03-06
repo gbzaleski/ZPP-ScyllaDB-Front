@@ -32,7 +32,14 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
         // Listen for messages
         websocket.current.addEventListener('message', function (event: any) {
 
-            event.data.arrayBuffer().then((response: any) => setResponse(driver.getResponse(Buffer.from(response))))
+            event.data.arrayBuffer().then((response: any) => {
+                response = driver.getResponse(Buffer.from(response))
+                if (typeof response == "string") {
+                    setResponse(response)
+                } else {
+                    setTableResponse(response)
+                }
+            })
 
             // TODO: Parsing response for table or just string and then executing respective setState.
 
