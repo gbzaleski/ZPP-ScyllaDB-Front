@@ -47,7 +47,7 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
             <div className={classes.lineContainer}>
                 Response
             </div>
-            {tableResponse && tableResponse.length && tableResponse[0].length ?
+            {tableResponse && tableResponse.length && tableResponse[0] && tableResponse[0].length ?
                 <TableDisplayer
                     headers = {tableResponse[0]}
                     data = {tableResponse.slice(1)}

@@ -82,18 +82,19 @@ const useStyles = makeStyles(theme => ({
         padding: "5px",
         fontSize: "15px",
         fontWeight: 'bold',
+        borderRadius: "5px",
         border: "3px solid lightblue",
         display: "inline-block",
         transition: "all 0.4s ease 0s",
+
+        '&:hover': {
+            color: "navy",
+            background: "#f6b93b",
+            borderColor: "#f6b93b",
+            transition: "all 0.4s ease 0s",
+        }
     },
 
-    // TODO Fix here, add some button animatior
-    tableButtonHover: {
-        color: "#ffffff",
-        background: "#f6b93b",
-        borderColor: "#f6b93b",
-        transition: "all 0.4s ease 0s",
-    }
 }));
 
 export default TableDisplayer;
