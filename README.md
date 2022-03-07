@@ -4,6 +4,7 @@ Front-end side of application with terminal for the CQL commands to access data 
 To launch application run:
 
 ```
+cd frontend
 npm install
 npm run start
 ```
