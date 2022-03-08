@@ -4,6 +4,7 @@ import getConsistency from "./functions/Consistency";
 import {numberToShort} from "./utils/conversions";
 import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
+import getPrepareMessage from "./utils/getPrepareMessage";
 
 class CQLDriver {
     #consistency: Consistency
@@ -34,6 +35,10 @@ class CQLDriver {
         this.#expectedIndex = 0
         this.clearPagingStates()
         return getQueryMessage(this, body, this.#setLastQuery, pagingState);
+    }
+
+    prepare = (body : string) : Buffer => {
+        return getPrepareMessage(body)
     }
 
     getNextPageQuery = () : Buffer | null => {

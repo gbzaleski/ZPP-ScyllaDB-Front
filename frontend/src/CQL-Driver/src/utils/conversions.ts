@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer';
-import {Byte, Int, Long, Short, String, StringList, Option, Bytes} from "./types";
+import {Byte, Int, Long, Short, String, StringList, Option, Bytes, ShortBytes} from "./types";
 const format = require("biguint-format");
 
 export const numberToLong = (value: bigint) : Long => {
@@ -95,6 +95,14 @@ export const bufferToBytes = (buf : Buffer) : Bytes | null => {
         return null;
     }
     return {length: numberToInt(BigInt(len)), bytes: buf.slice(4, len + 4)}
+}
+
+export const bufferToShortBytes = (buf : Buffer) : ShortBytes => {
+    let len = Number(format(buf.slice(0, 2)))
+    if (len < 0) {
+        len = 0
+    }
+    return {length: numberToShort(BigInt(len)), shortBytes: buf.slice(4, len + 2)}
 }
 
 export const optionToReadableString = (id : Short, byt: Bytes) : string => {
