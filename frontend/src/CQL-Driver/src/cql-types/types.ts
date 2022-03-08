@@ -161,7 +161,7 @@ export class MAP implements type {
 
     constructor(data: Buffer, value : any) {
         const [firstVal, secondVal] = value
-        console.log(firstVal, secondVal)
+        //console.log(firstVal, secondVal)
         const n = data.readInt32BE(0)
         let dataPart = data.slice(4)
         this.container = Array.from({length: n})
@@ -187,7 +187,7 @@ export class MAP implements type {
         let resultString = "{"
         for (let i = 0; i < this.container.length; ++i) {
             const [key, value] = this.container[i]
-            if (key != null) {console.log(key.toString())}
+            //if (key != null) {console.log(key.toString())}
             const keyString = key != null ? key.toString() : "null"
             const valueString =value != null ? value.toString() : "null"
             resultString += keyString + " : " + valueString + ", "
@@ -275,7 +275,7 @@ export class TUPLE implements type {
         for (let i = 0; i < n; ++i) {
             let bytes = bufferToBytes(data);
             if (bytes != null) {
-                console.log(value[i])
+                //console.log(value[i])
                 this.tuple[i] = getTypeFrom(value[i], bytes.bytes);
                 data = data.slice(bytes.bytes.length + 4)
             }

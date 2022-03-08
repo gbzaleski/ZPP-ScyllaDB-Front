@@ -10,8 +10,9 @@ import {numberToByte, numberToInt} from "./conversions";
 const PageSizeFlagValue : bigint = 4n
 const NextPageFlagValue : bigint = 8n
 
-const getQueryMessage = (driver: any, body: string) : Buffer => {
+const getQueryMessage = (driver: any, body: string, setLastQuery : any) : Buffer => {
     let buffer = Frame();
+    setLastQuery(body)
     const consistency = driver.getConsistency()
     const [pageSize, pagingEnabled] = driver.getPaging()
     const [hasMorePages, nextPageData] = driver.getNextPageData()
@@ -29,15 +30,15 @@ const getQueryMessage = (driver: any, body: string) : Buffer => {
 
     if (hasMorePages && nextPageData != null) {
         flagValue += NextPageFlagValue
-        extraData = Buffer.concat([extraData, nextPageData.bytes])
+        extraData = Buffer.concat([extraData,numberToInt(BigInt(nextPageData.bytes.length)).int, nextPageData.bytes])
     }
-
+    
     // Basic query - long string(int) + consistency(short) + flag(byte) + possible data    
     const queryBody = Buffer.from(body, 'utf-8');
     const length = BigInt(queryBody.length + 7 + extraData.length)
     setLength(buffer, length)
     buffer = addQueryBody(buffer, queryBody, consistency,  numberToByte(flagValue), Number(length), extraData)
-
+    console.log(buffer)
     return buffer;
 }
 

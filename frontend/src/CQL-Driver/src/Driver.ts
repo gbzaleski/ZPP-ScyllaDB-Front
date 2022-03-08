@@ -12,20 +12,23 @@ class CQLDriver {
     #pagingEnabled : Boolean
     #nextPageData : Bytes | null
     #hasMorePages : Boolean
+    #lastQuery: string
 
     constructor() {
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
-        this.#pageSize = 100
+        this.#pageSize = 10
         this.#pagingEnabled = true
         this.#nextPageData = bufferToBytes(Buffer.from(""))
         this.#hasMorePages = false
+        this.#lastQuery = ""
     }
 
     handshake = handshakeMessage.bind(this)
 
     query = (body : string) : Buffer => {
-        return getQueryMessage(this, body);
+        //console.log(this.#lastQuery)
+        return getQueryMessage(this, body, this.#setLastQuery);
     }
 
     setConsistency = (s : string) => {
@@ -39,6 +42,14 @@ class CQLDriver {
 
     #setKeyspace = (keyspace : string) => {
         this.#keyspace = keyspace
+    }
+
+    #setLastQuery = (query : string) : void => {
+        this.#lastQuery = query;
+    }
+
+    getLastQuery = () : string => {
+        return this.#lastQuery
     }
 
     getKeyspace = () : string => {

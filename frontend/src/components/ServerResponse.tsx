@@ -8,10 +8,11 @@ interface ServerResponseProps {
     response: string;
     setResponse: (s: string) => void;
     tableResponse: string[][];
-    setTableResponse: (s: string[][]) => void
+    setTableResponse: (s: string[][]) => void;
+    sendMsg: any
 }
 
-const ServerResponse = ({driver, websocket, response, setResponse, tableResponse, setTableResponse} : ServerResponseProps) => {
+const ServerResponse = ({driver, websocket, response, setResponse, tableResponse, setTableResponse, sendMsg} : ServerResponseProps) => {
     const classes = useStyles();
 
     useEffect(() => {
@@ -56,8 +57,10 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
             </div>
             {tableResponse && tableResponse.length && tableResponse[0] && tableResponse[0].length ?
                 <TableDisplayer
+                    driver = {driver}
                     headers = {tableResponse[0]}
                     data = {tableResponse.slice(1)}
+                    sendMsg ={sendMsg}
                 />
             :   
             (<div className={classes.lineContainer}>

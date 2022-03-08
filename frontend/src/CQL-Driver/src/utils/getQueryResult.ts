@@ -31,7 +31,7 @@ class RowTable {
 }
 
 const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<string>> => {
-    //console.log(buf)
+    console.log(buf)
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -50,11 +50,12 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
     stringLen += 4
     const columnCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
     stringLen += 4
-
+    
     if (hasMorePages) {
         const nextPageData = bufferToBytes(buf.slice(stringLen))
         if (nextPageData != null) {
-            stringLen += nextPageData.bytes.length;
+            console.log(nextPageData)
+            stringLen += nextPageData.bytes.length + 4;
             driver.setNextPageData(true, nextPageData)
         } else {
             // 4 bytes length
@@ -89,7 +90,7 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
         //console.log(columnName.string.toString())
         stringLen += Number(format(columnName.length.short)) + 2
         let columnType = bufferToOption(buf.slice(stringLen))
-        console.log(format(columnType.id.short))
+        //console.log(format(columnType.id.short))
         columnVars[i] = {name: columnName, type: columnType}
         //console.log(columnType)
         stringLen += columnType.size + 2
@@ -119,12 +120,12 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
         content[0][j] = columnVars[j].name.string.toString()
     }
     
-    console.log(rowCount, columnCount)
+    //console.log(rowCount, columnCount)
     for (let i = 1; i <= rowCount; ++i) {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            console.log(format(columnVars[j].type.id.short))
-            console.log(rows[i - 1][j].bytes)
+            //console.log(format(columnVars[j].type.id.short))
+            //console.log(rows[i - 1][j].bytes)
             const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
             //content[i] = 
             if (receivedType != null) {
@@ -182,12 +183,13 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
 
 const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string | Array<Array<string>> => {
 
-    console.log(buffer)
+    //console.log(buffer)
     const length = getLength(buffer)
-    console.log(length)
+    //console.log(length)
     const body = buffer.slice(9, 9 + Number(length));
 
     let code = Number(format(body.slice(0, 4)))
+    console.log(code)
     if (getOpcodeName(buffer) == "RESULT") {
         console.log(code)
         switch (code) {

@@ -196,6 +196,7 @@ const Terminal = () => {
                 tableResponse={tableResponse}
                 setTableResponse={setTableResponse}
                 driver={driver}
+                sendMsg={sendMsg}
             />
         </div>
     );
