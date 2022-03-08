@@ -21,7 +21,6 @@ const Terminal = () => {
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value);
-        event.target.value = "";
     }
 
     // Send a msg to the websocket
