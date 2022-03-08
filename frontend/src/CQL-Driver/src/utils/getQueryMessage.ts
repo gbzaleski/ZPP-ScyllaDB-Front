@@ -2,20 +2,21 @@ import Frame from "./FrameTemplate";
 import setOpcode from "./setOpcode";
 import setVersion from "./setVersion";
 import {Buffer} from "buffer";
-import {Consistency} from "./types";
+import {Bytes, Consistency} from "./types";
 import setLength from "./setLength";
 import addQueryBody from "./addQueryBody";
 import {numberToByte, numberToInt} from "./conversions";
+import { CQLDriver } from "../Driver";
 
 const PageSizeFlagValue : bigint = 4n
 const NextPageFlagValue : bigint = 8n
 
-const getQueryMessage = (driver: any, body: string, setLastQuery : any) : Buffer => {
+const getQueryMessage = (driver: CQLDriver, body: string, setLastQuery : any, pagingState? : Bytes) : Buffer => {
     let buffer = Frame();
+
     setLastQuery(body)
     const consistency = driver.getConsistency()
     const [pageSize, pagingEnabled] = driver.getPaging()
-    const [hasMorePages, nextPageData] = driver.getNextPageData()
     setOpcode(buffer, "QUERY");
     setVersion(buffer, 4);
 
@@ -28,9 +29,9 @@ const getQueryMessage = (driver: any, body: string, setLastQuery : any) : Buffer
         extraData = Buffer.concat([extraData, numberToInt(BigInt(pageSize)).int])
     }
 
-    if (hasMorePages && nextPageData != null) {
+    if (pagingState) {
         flagValue += NextPageFlagValue
-        extraData = Buffer.concat([extraData,numberToInt(BigInt(nextPageData.bytes.length)).int, nextPageData.bytes])
+        extraData = Buffer.concat([extraData,numberToInt(BigInt(pagingState.bytes.length)).int, pagingState.bytes])
     }
     
     // Basic query - long string(int) + consistency(short) + flag(byte) + possible data    
@@ -38,7 +39,6 @@ const getQueryMessage = (driver: any, body: string, setLastQuery : any) : Buffer
     const length = BigInt(queryBody.length + 7 + extraData.length)
     setLength(buffer, length)
     buffer = addQueryBody(buffer, queryBody, consistency,  numberToByte(flagValue), Number(length), extraData)
-    console.log(buffer)
     return buffer;
 }
 

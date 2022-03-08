@@ -27,13 +27,16 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
         </tr>
     })
 
-    const onBack = () => alert("Back")
-    const onNext = () => {
-        const [hasPage, data] = driver.getNextPageData()
-        console.log(hasPage, data)
-        if (hasPage) {
-            console.log(driver.getLastQuery())
-            sendMsg(driver.query(driver.getLastQuery()).toString());
+    const onBack = () => {
+        const previousPageQuery = driver.getPreviousPageQuery();
+        if (previousPageQuery != null) {
+            sendMsg (previousPageQuery)
+        }
+    }    
+    const onNext = () => {        
+        const nextPageQuery = driver.getNextPageQuery();
+        if (nextPageQuery != null) {
+            sendMsg (nextPageQuery)
         }
     }
 

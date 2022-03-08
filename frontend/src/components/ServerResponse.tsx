@@ -9,7 +9,7 @@ interface ServerResponseProps {
     setResponse: (s: string) => void;
     tableResponse: string[][];
     setTableResponse: (s: string[][]) => void;
-    sendMsg: any
+    sendMsg: (s : Buffer) => void; 
 }
 
 const ServerResponse = ({driver, websocket, response, setResponse, tableResponse, setTableResponse, sendMsg} : ServerResponseProps) => {

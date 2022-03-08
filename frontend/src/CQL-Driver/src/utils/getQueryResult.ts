@@ -11,6 +11,7 @@ import getLength from "./getLength";
 import { getOpcodeName } from "./getOpcode";
 import {type} from "../cql-types/types";
 import { getTypeFrom } from "../cql-types/typeFactory";
+import { CQLDriver } from "../Driver";
 const format = require("biguint-format");
 
 const getVoidResult = () : string => {
@@ -30,8 +31,7 @@ class RowTable {
     }
 }
 
-const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<string>> => {
-    console.log(buf)
+const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array<string>> => {
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -52,19 +52,18 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
     stringLen += 4
     
     if (hasMorePages) {
-        const nextPageData = bufferToBytes(buf.slice(stringLen))
-        if (nextPageData != null) {
-            console.log(nextPageData)
-            stringLen += nextPageData.bytes.length + 4;
-            driver.setNextPageData(true, nextPageData)
+        const pagingState = bufferToBytes(buf.slice(stringLen))
+        if (pagingState != null) {
+            stringLen += pagingState.bytes.length + 4;
+            if (driver.getExpectedIndex() == driver.getNumberOfLoadedPages() - 1) {
+                driver.addPagingState(pagingState)
+            }
+            driver.setPageNumber(driver.getExpectedIndex())
         } else {
-            // 4 bytes length
             stringLen += 4
-            driver.setNextPageData(false, nextPageData)
         }
-       
     } else {
-        driver.setNextPageData(false)
+       driver.setPageNumber(driver.getExpectedIndex())
     }
 
     let keySpaceName, tableName
@@ -153,7 +152,6 @@ const getPreparedResult = () => {
 const getSchemaChangeResult = (buf : Buffer) : string => {
     let stringLen = 0
     const changeType = bufferToString(buf).string.toString()
-    console.log(changeType)
     stringLen += changeType.length + 2
     const target = bufferToString(buf.slice(stringLen)).string.toString()
     stringLen += target.length + 2
@@ -189,9 +187,7 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string
     const body = buffer.slice(9, 9 + Number(length));
 
     let code = Number(format(body.slice(0, 4)))
-    console.log(code)
     if (getOpcodeName(buffer) == "RESULT") {
-        console.log(code)
         switch (code) {
             case 1: {
                 return getVoidResult();
