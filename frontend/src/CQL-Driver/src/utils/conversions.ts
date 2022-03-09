@@ -73,9 +73,7 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
         let optionList : any[] = Array.from({length: n})
        
         for (let i = 0; i < n; ++i ) {
-            console.log(buf.slice(stringLen))
             optionList[i] = bufferToOption(buf.slice(stringLen))
-            console.log(optionList[i])
             stringLen += optionList[i].size + 2
             size += optionList[i].size + 2
         }

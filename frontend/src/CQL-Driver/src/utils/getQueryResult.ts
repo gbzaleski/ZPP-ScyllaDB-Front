@@ -11,6 +11,7 @@ import getLength from "./getLength";
 import { getOpcodeName } from "./getOpcode";
 import {type} from "../cql-types/types";
 import { getTypeFrom } from "../cql-types/typeFactory";
+import { CQLDriver } from "../Driver";
 const format = require("biguint-format");
 
 const getVoidResult = () : string => {
@@ -30,8 +31,7 @@ class RowTable {
     }
 }
 
-const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<string>> => {
-    //console.log(buf)
+const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array<string>> => {
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -50,20 +50,20 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
     stringLen += 4
     const columnCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
     stringLen += 4
-
+    
     if (hasMorePages) {
-        const nextPageData = bufferToBytes(buf.slice(stringLen))
-        if (nextPageData != null) {
-            stringLen += nextPageData.bytes.length;
-            driver.setNextPageData(true, nextPageData)
+        const pagingState = bufferToBytes(buf.slice(stringLen))
+        if (pagingState != null) {
+            stringLen += pagingState.bytes.length + 4;
+            if (driver.getExpectedIndex() == driver.getNumberOfLoadedPages() - 1) {
+                driver.addPagingState(pagingState)
+            }
+            driver.setPageNumber(driver.getExpectedIndex())
         } else {
-            // 4 bytes length
             stringLen += 4
-            driver.setNextPageData(false, nextPageData)
         }
-       
     } else {
-        driver.setNextPageData(false)
+       driver.setPageNumber(driver.getExpectedIndex())
     }
 
     let keySpaceName, tableName
@@ -89,7 +89,7 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
         //console.log(columnName.string.toString())
         stringLen += Number(format(columnName.length.short)) + 2
         let columnType = bufferToOption(buf.slice(stringLen))
-        console.log(format(columnType.id.short))
+        //console.log(format(columnType.id.short))
         columnVars[i] = {name: columnName, type: columnType}
         //console.log(columnType)
         stringLen += columnType.size + 2
@@ -119,12 +119,12 @@ const getRowsResult = (driver : any, buf : Buffer) : string  | Array<Array<strin
         content[0][j] = columnVars[j].name.string.toString()
     }
     
-    console.log(rowCount, columnCount)
+    //console.log(rowCount, columnCount)
     for (let i = 1; i <= rowCount; ++i) {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            console.log(format(columnVars[j].type.id.short))
-            console.log(rows[i - 1][j].bytes)
+            //console.log(format(columnVars[j].type.id.short))
+            //console.log(rows[i - 1][j].bytes)
             const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
             //content[i] = 
             if (receivedType != null) {
@@ -152,7 +152,6 @@ const getPreparedResult = () => {
 const getSchemaChangeResult = (buf : Buffer) : string => {
     let stringLen = 0
     const changeType = bufferToString(buf).string.toString()
-    console.log(changeType)
     stringLen += changeType.length + 2
     const target = bufferToString(buf.slice(stringLen)).string.toString()
     stringLen += target.length + 2
@@ -182,14 +181,13 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
 
 const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string | Array<Array<string>> => {
 
-    console.log(buffer)
+    //console.log(buffer)
     const length = getLength(buffer)
-    console.log(length)
+    //console.log(length)
     const body = buffer.slice(9, 9 + Number(length));
 
     let code = Number(format(body.slice(0, 4)))
     if (getOpcodeName(buffer) == "RESULT") {
-        console.log(code)
         switch (code) {
             case 1: {
                 return getVoidResult();

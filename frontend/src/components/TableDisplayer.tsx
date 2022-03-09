@@ -1,30 +1,44 @@
 import React, {useEffect, useState} from "react";
 import {makeStyles} from "@material-ui/core/styles";
+import { CQLDriver } from "../CQL-Driver/src/Driver";
+import Terminal from "./Terminal";
 
 interface TableProps {
+    driver : CQLDriver;
     headers: string[]; 
     data: string[][];
+    sendMsg: any;
 }
 
-function TableDisplayer({headers, data} : TableProps)
+function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
 {
     const classes = useStyles();
 
     const page = 107; // mock page number
-    const onBack = () => alert("Back")
-    const onNext = () => alert("Next")
-
     const header = headers.map((ele, i) => {
         return <th className={classes.cellTh} key = {i}>{ele}</th>
     })
 
-    const content = data.map((row, rowId) => {
+    let content =data.map((row, rowId) => {
         return <tr key = {rowId}>
             {row.map((ele, id) => {
                 return <td className={classes.cellTd} key={id}>{ele}</td>
             })}
         </tr>
     })
+
+    const onBack = () => {
+        const previousPageQuery = driver.getPreviousPageQuery();
+        if (previousPageQuery != null) {
+            sendMsg (previousPageQuery)
+        }
+    }    
+    const onNext = () => {        
+        const nextPageQuery = driver.getNextPageQuery();
+        if (nextPageQuery != null) {
+            sendMsg (nextPageQuery)
+        }
+    }
 
     return (
         <table

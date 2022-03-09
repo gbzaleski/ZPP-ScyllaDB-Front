@@ -1,31 +1,78 @@
 import handshakeMessage from "./functions/Handshake"
 import {Bytes, Consistency} from "./utils/types";
 import getConsistency from "./functions/Consistency";
-import {bufferToBytes, numberToInt, numberToShort} from "./utils/conversions";
+import {numberToShort} from "./utils/conversions";
 import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
 
 class CQLDriver {
     #consistency: Consistency
     #keyspace : string
-    #pageSize: Number
-    #pagingEnabled : Boolean
-    #nextPageData : Bytes | null
-    #hasMorePages : Boolean
+    #pageSize: number
+    #pagingEnabled : boolean
+    #pagingStates : Array<Bytes>
+    #pagingIndex : number
+    #lastQuery: string
+    #expectedIndex : number
+    #expectingNewQuery : boolean
 
     constructor() {
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
-        this.#pageSize = 100
+        this.#pageSize = 2
         this.#pagingEnabled = true
-        this.#nextPageData = bufferToBytes(Buffer.from(""))
-        this.#hasMorePages = false
+        this.#pagingStates = []
+        this.#pagingIndex = -1
+        this.#expectedIndex = 0
+        this.#lastQuery = ""
+        this.#expectingNewQuery = true
     }
 
     handshake = handshakeMessage.bind(this)
 
-    query = (body : string) : Buffer => {
-        return getQueryMessage(this, body);
+    query = (body : string, pagingState? : Bytes) : Buffer => {
+        this.#expectedIndex = 0
+        this.clearPagingStates()
+        return getQueryMessage(this, body, this.#setLastQuery, pagingState);
+    }
+
+    getNextPageQuery = () : Buffer | null => {
+        const wantedIndex = this.#pagingIndex + 1
+        return this.#getQueryPageAt(wantedIndex)
+    }
+
+    getNumberOfLoadedPages = () : number => {
+        return this.#pagingStates.length + 1
+    }
+
+    getPreviousPageQuery = () : Buffer | null => {
+        const wantedIndex = this.#pagingIndex - 1
+        return this.#getQueryPageAt(wantedIndex)
+    }
+
+    #getQueryPageAt = (index: number) : Buffer | null => {
+        const [isFirstPage, pagingState] = this.#getPagingState(index)
+        this.#expectedIndex = index
+
+        if (isFirstPage && pagingState == null) {
+            return getQueryMessage(this, this.#lastQuery, this.#setLastQuery);
+        } else if (pagingState == null) {
+            return null
+        }
+
+        return getQueryMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
+    }
+
+    getExpectedIndex = () : number => {
+        return this.#expectedIndex
+    }
+
+    getExpectingNewQuery = () : boolean => {
+        return this.#expectingNewQuery
+    }
+
+    setPageNumber = (page: number) : void => {
+        this.#pagingIndex = page
     }
 
     setConsistency = (s : string) => {
@@ -41,6 +88,14 @@ class CQLDriver {
         this.#keyspace = keyspace
     }
 
+    #setLastQuery = (query : string) : void => {
+        this.#lastQuery = query;
+    }
+
+    getLastQuery = () : string => {
+        return this.#lastQuery
+    }
+
     getKeyspace = () : string => {
         return this.#keyspace
     }
@@ -53,18 +108,30 @@ class CQLDriver {
         return this.#consistency
     }
 
-    getNextPageData = () : [Boolean, (Bytes | null)] => {
-        return [this.#hasMorePages, this.#nextPageData]
-    }
-
-    setNextPageData = (hasMorePages : Boolean, nextPageData? : Bytes) : void => {
-        this.#hasMorePages = hasMorePages
-        if (nextPageData) {
-            this.#nextPageData = nextPageData
+    #getPagingState = (index: number) :  [boolean, Bytes | null]  => {
+       
+        if (index == 0) {
+            return [true, null]
+        } else if (index < 0 || index - 1 >= this.#pagingStates.length) {
+            return [false, null]
         }
+
+        return [false, this.#pagingStates[index - 1]]
     }
 
-    setPaging = (mode : string, size? : Number) => {
+    getPageNumber = () : number => {
+        return this.#pagingIndex
+    }
+
+    clearPagingStates = () : void => {
+        this.#pagingStates = []
+    }
+
+    addPagingState = (nextPagingState : Bytes) : void => {
+        this.#pagingStates.push(nextPagingState)
+    }
+
+    setPaging = (mode : string, size? : number) => {
         if (size) {
             this.#pageSize = size;
         }
@@ -76,7 +143,7 @@ class CQLDriver {
         } 
     }
 
-    getPaging = () : [Number, Boolean] => {
+    getPaging = () : [number, boolean] => {
         return [this.#pageSize, this.#pagingEnabled]
     }
 

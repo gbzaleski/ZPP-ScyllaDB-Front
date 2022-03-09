@@ -24,10 +24,8 @@ const Terminal = () => {
     }
 
     // Send a msg to the websocket
-    const sendMsg = (msg : string) => {
-        const coder = new TextEncoder()
-        
-        webSocket.current.send(coder.encode(msg));
+    const sendMsg = (msg : Buffer) => {
+        webSocket.current.send(msg);
     }
 
     const sendHandshake = () => {
@@ -143,8 +141,7 @@ const Terminal = () => {
                             break;
 
                         setServerResponse("")
-                        console.log(driver.query(command));
-                        sendMsg(driver.query(command).toString());
+                        sendMsg(driver.query(command));
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
                         setTableResponse([]);
@@ -196,6 +193,7 @@ const Terminal = () => {
                 tableResponse={tableResponse}
                 setTableResponse={setTableResponse}
                 driver={driver}
+                sendMsg={sendMsg}
             />
         </div>
     );

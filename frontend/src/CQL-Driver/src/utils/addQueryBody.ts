@@ -16,8 +16,6 @@ const addQueryBody = (buffer: Buffer, queryBody: Buffer, consistency: Consistenc
     extraData.copy(body, queryBody.length + 7, 0, extraData.length)
     
     buffer = Buffer.concat([buffer, body]);
-    console.log(buffer)
-    console.log(extraData)
     return buffer;
 }
 
