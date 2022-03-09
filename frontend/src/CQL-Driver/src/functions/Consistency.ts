@@ -6,43 +6,43 @@ const getConsistency = (value : string) : Consistency => {
 
     switch (value) {
         case "ANY": {
-            consistencyCode = 1;
+            consistencyCode = 0;
             break;
         }
         case "ONE": {
-            consistencyCode = 2;
+            consistencyCode = 1;
             break;
         }
         case "TWO": {
-            consistencyCode = 3;
+            consistencyCode = 2;
             break;
         }
         case "THREE": {
-            consistencyCode = 4;
+            consistencyCode = 3;
             break;
         }
         case "QUORUM": {
-            consistencyCode = 5;
+            consistencyCode = 4;
             break;
         }
         case "ALL": {
-            consistencyCode = 6;
+            consistencyCode = 5;
             break;
         }
         case "LOCAL_QUORUM": {
-            consistencyCode = 7;
+            consistencyCode = 6;
             break;
         }
         case "EACH_QUORUM": {
-            consistencyCode = 8;
+            consistencyCode = 7;
             break;
         }
         case "LOCAL_SERIAL": {
-            consistencyCode = 9;
+            consistencyCode = 8;
             break;
         }
         case "LOCAL_ONE": {
-            consistencyCode = 10;
+            consistencyCode = 9;
             break;
         }
     }

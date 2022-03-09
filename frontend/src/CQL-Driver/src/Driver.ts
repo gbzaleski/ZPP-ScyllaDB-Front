@@ -5,6 +5,7 @@ import {numberToShort} from "./utils/conversions";
 import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
 import getPrepareMessage from "./utils/getPrepareMessage";
+import getExecuteMessage from "./utils/getExecuteMessage";
 
 class CQLDriver {
     #consistency: Consistency
@@ -39,6 +40,10 @@ class CQLDriver {
 
     prepare = (body : string) : Buffer => {
         return getPrepareMessage(body)
+    }
+
+    execute = (body : string) : Buffer => {
+        return getExecuteMessage(body)
     }
 
     getNextPageQuery = () : Buffer | null => {

@@ -102,7 +102,7 @@ export const bufferToShortBytes = (buf : Buffer) : ShortBytes => {
     if (len < 0) {
         len = 0
     }
-    return {length: numberToShort(BigInt(len)), shortBytes: buf.slice(4, len + 2)}
+    return {length: numberToShort(BigInt(len)), shortBytes: buf.slice(2, len + 2)}
 }
 
 export const optionToReadableString = (id : Short, byt: Bytes) : string => {

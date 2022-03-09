@@ -1,7 +1,7 @@
 import {Buffer} from "buffer";
 import {numberToInt} from "./conversions";
 
-const addQueryBody = (buffer: Buffer, prepareBody: Buffer, length : number) : Buffer => {
+const addPrepareBody = (buffer: Buffer, prepareBody: Buffer, length : number) : Buffer => {
     const body = Buffer.alloc(length);
 
     const prepareSize = numberToInt(BigInt(prepareBody.length));
@@ -13,4 +13,4 @@ const addQueryBody = (buffer: Buffer, prepareBody: Buffer, length : number) : Bu
     return buffer;
 }
 
-export default addQueryBody;
+export default addPrepareBody;
