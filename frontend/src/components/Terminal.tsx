@@ -154,14 +154,14 @@ const Terminal = () => {
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PREPARE") {
 
-                        const prepareArg = tokenizedCommand[1]
+                        const prepareArg = command.slice(tokenizedCommand[0].length).trim()
                         console.log("Preparing ", prepareArg)
 
                         // Tu jakies wysłanie tego
 
 
                         // Tu jakis odbiór
-                        
+                        sendMsg(driver.prepare(prepareArg))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
                         setServerResponse("")
@@ -176,7 +176,7 @@ const Terminal = () => {
 
 
                         // Tu jakis odbiór
-
+                        sendMsg(driver.execute(executeArgs[0]))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setCommand("");
                         setServerResponse("")
