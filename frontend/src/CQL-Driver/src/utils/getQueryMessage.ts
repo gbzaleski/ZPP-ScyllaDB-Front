@@ -32,7 +32,7 @@ const getQueryMessage = (driver: CQLDriver, body: string, setLastQuery : any, pa
     if (pagingState) {
         flagValue += NextPageFlagValue
         
-        extraData = Buffer.concat([extraData,numberToInt(BigInt(pagingState.bytes.length - 1)).int, pagingState.bytes])
+        extraData = Buffer.concat([extraData,numberToInt(BigInt(pagingState.bytes.length)).int, pagingState.bytes])
     }
     
     // Basic query - long string(int) + consistency(short) + flag(byte) + possible data    
