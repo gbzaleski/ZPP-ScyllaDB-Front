@@ -1,4 +1,4 @@
-import {Blob, Buffer} from 'buffer';
+import {Buffer} from 'buffer';
 import {bufferToBytes, bufferToInt, numberToInt} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
@@ -23,7 +23,7 @@ export class ASCII implements type {
     }
 
     toString() {
-        return ""
+        return this.asciiText
     }
 }
 
@@ -36,20 +36,21 @@ export class BIGINT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 
 // Blob is just a sequence of bytes
 export class BLOB implements type {
-    value: Blob = new Blob([""]);
-     
+    
+    #value : BigInt = 0n
+
     constructor(data : Buffer) {
-        this.value =  new Blob([new Uint8Array(data)])
+        this.#value = BigInt(format(data))
     }
 
     toString() {
-        return ""
+        return "0x" + this.#value.toString(16)
     }
 }
 
@@ -97,7 +98,7 @@ export class DOUBLE implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 
@@ -108,7 +109,7 @@ export class FLOAT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 export class INET implements type {
@@ -119,7 +120,13 @@ export class INET implements type {
     }
 
     toString() {
-        return ""
+        if (this.address.length == 4) {
+            return this.address.join('.').toString()
+        } else if (this.address.length == 6) {
+            return "unimplemented"
+        } else {
+            return "invalid address"
+        }
     }
 }
 
@@ -161,7 +168,6 @@ export class MAP implements type {
 
     constructor(data: Buffer, value : any) {
         const [firstVal, secondVal] = value
-        //console.log(firstVal, secondVal)
         const n = data.readInt32BE(0)
         let dataPart = data.slice(4)
         this.container = Array.from({length: n})
@@ -211,6 +217,7 @@ export class SET implements type {
                 data = data.slice(bytes.bytes.length + 4)
             }
         }
+        //console.log(this.list.toString())
     }
 
     toString() {
@@ -227,18 +234,6 @@ export class SMALLINT implements type {
 
     toString() {
         return ""
-    }
-}
-
-class TEXT implements type {
-   #value : string = ""
-
-    constructor(data: Buffer) {
-        this.#value = data.toString('utf8')
-    }
-
-    toString() {
-        return this.#value
     }
 }
 
@@ -262,7 +257,7 @@ class TINYINT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 

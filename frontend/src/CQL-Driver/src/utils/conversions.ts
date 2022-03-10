@@ -1,6 +1,7 @@
 import { Buffer } from 'buffer';
 import {Byte, Int, Long, Short, String, StringList, Option, Bytes, ShortBytes} from "./types";
 const format = require("biguint-format");
+import {parse} from 'uuid'
 
 export const numberToLong = (value: bigint) : Long => {
     return {long: bigIntToBuffer(value, 8)}
@@ -90,7 +91,7 @@ export const bufferToString = (buf : Buffer) : String => {
 }
 
 export const bufferToBytes = (buf : Buffer) : Bytes | null => {
-    const len = Number(format(buf.slice(0, 4)))
+    const len = buf.readInt32BE(0)
     if (len < 0) {
         return null;
     }
@@ -172,6 +173,25 @@ export const bufferToStringList = (buf : Buffer) : StringList => {
         result.push(newItem)
     }
     return  {length: numberToShort(len), stringList: result}
+}
+
+const stringToValue = (textValue : string) : Buffer => {
+    if (textValue == "null") {
+        return Buffer.from([-1])
+    }
+    //const val : ArrayLike<number> = parse(textValue)
+    const result = Buffer.concat([numberToInt(BigInt(textValue.length)).int, Buffer.from(textValue)])
+    return result
+}
+
+export const tokensToValues = (values : Array<string>) : Buffer => {
+    let results = numberToShort(BigInt(values.length)).short
+
+    for (let i = 0; i < values.length; ++i) {
+        results = Buffer.concat([results, stringToValue(values[i])])
+    }
+
+    return results
 }
 
 export const bigIntToBuffer = (value : bigint, size? : number) : Buffer => {

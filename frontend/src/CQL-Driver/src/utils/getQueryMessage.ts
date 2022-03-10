@@ -40,7 +40,6 @@ const getQueryMessage = (driver: CQLDriver, body: string, setLastQuery : any, pa
     const length = BigInt(queryBody.length + 7 + extraData.length)
     setLength(buffer, length)
     buffer = addQueryBody(buffer, queryBody, consistency,  numberToByte(flagValue), Number(length), extraData)
-    console.log(buffer)
     return buffer;
 }
 

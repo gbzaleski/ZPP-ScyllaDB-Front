@@ -18,6 +18,7 @@ class CQLDriver {
     #lastQueryType : string
     #expectedIndex : number
     #expectingNewQuery : boolean
+    #bindValues : Array<string>
 
     constructor() {
         this.#consistency = getConsistency("ONE");
@@ -30,6 +31,7 @@ class CQLDriver {
         this.#lastQuery = ""
         this.#lastQueryType = "QUERY"
         this.#expectingNewQuery = true
+        this.#bindValues = []
     }
 
     handshake = handshakeMessage.bind(this)
@@ -38,6 +40,7 @@ class CQLDriver {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "QUERY"
+        this.#bindValues = []
         return getQueryMessage(this, body, this.#setLastQuery, pagingState);
     }
 
@@ -45,11 +48,12 @@ class CQLDriver {
         return getPrepareMessage(body)
     }
 
-    execute = (body : string) : Buffer => {
+    execute = (body : string, bindValues : Array<string>) : Buffer => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "EXECUTE"
-        return getExecuteMessage(this, body, this.#setLastQuery);
+        this.#bindValues = bindValues
+        return getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues);
     }
 
     getNextPageQuery = () : Buffer | null => {
@@ -73,7 +77,7 @@ class CQLDriver {
 
         if (isFirstPage && pagingState == null) {
             if (this.#lastQueryType == "EXECUTE") {
-                return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery);
+                return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, this.#bindValues);
             } else {
                 return getQueryMessage(this, this.#lastQuery, this.#setLastQuery);
             }
@@ -81,7 +85,7 @@ class CQLDriver {
             return null
         }
         if (this.#lastQueryType == "EXECUTE") {
-            return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
+            return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, this.#bindValues, pagingState);
         } else {
             return getQueryMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
         }

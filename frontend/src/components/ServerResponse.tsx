@@ -32,11 +32,7 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
 
         // Listen for messages
         websocket.current.addEventListener('message', function (event: any) {
-
-            console.log(event)
-          
             event.data.arrayBuffer().then((response: any) => {
-                console.log(Buffer.from(response).toString())
                 response = driver.getResponse(Buffer.from(response))
                 if (typeof response == "string") {
                     setResponse(response)
