@@ -237,9 +237,32 @@ export class SMALLINT implements type {
     }
 }
 
-class TIME implements type {
+export class TIME implements type {
+    #hours : bigint = 0n;
+    #minutes : bigint = 0n
+    #seconds : bigint = 0n
+    #nanoseconds :bigint = 0n
+    #hoursRatio : bigint = 3600000000000n
+    #minutesRatio : bigint = 60000000000n
+    #secondsRatio : bigint = 60000000000n
+
+
+    constructor(data: Buffer) {
+        this.#nanoseconds = data.slice(0, 8).readBigInt64BE(0)
+        if (0 < this.#nanoseconds && this.#nanoseconds < 86399999999999) {
+            this.#hours = this.#nanoseconds / this.#hoursRatio
+            this.#nanoseconds -= this.#hours * this.#hoursRatio
+
+            this.#minutes = this.#nanoseconds / this.#minutesRatio
+            this.#nanoseconds -= this.#minutes * this.#minutesRatio
+
+            this.#seconds = this.#nanoseconds / this.#secondsRatio
+            this.#nanoseconds -= this.#hours * this.#secondsRatio
+        }
+    }
+
     toString() {
-        return ""
+        return this.#hours + ":" + this.#minutes + ":" + this.#seconds
     }
 }
 
