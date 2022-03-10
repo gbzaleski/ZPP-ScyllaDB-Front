@@ -31,7 +31,8 @@ const getQueryMessage = (driver: CQLDriver, body: string, setLastQuery : any, pa
 
     if (pagingState) {
         flagValue += NextPageFlagValue
-        extraData = Buffer.concat([extraData,numberToInt(BigInt(pagingState.bytes.length)).int, pagingState.bytes])
+        
+        extraData = Buffer.concat([extraData,numberToInt(BigInt(pagingState.bytes.length - 1)).int, pagingState.bytes])
     }
     
     // Basic query - long string(int) + consistency(short) + flag(byte) + possible data    
@@ -39,6 +40,7 @@ const getQueryMessage = (driver: CQLDriver, body: string, setLastQuery : any, pa
     const length = BigInt(queryBody.length + 7 + extraData.length)
     setLength(buffer, length)
     buffer = addQueryBody(buffer, queryBody, consistency,  numberToByte(flagValue), Number(length), extraData)
+    console.log(buffer)
     return buffer;
 }
 

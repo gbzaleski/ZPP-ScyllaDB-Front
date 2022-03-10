@@ -31,6 +31,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     }
     if (metaDataFlags & 2) {
         hasMorePages = true
+        console.log("wincej page'y")
     }
     if (metaDataFlags & 4) {
         noMetaData = true
@@ -50,7 +51,9 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
         } else {
             stringLen += 4
         }
+        console.log(pagingState)
     } else {
+       console.log(buf)
        driver.setPageNumber(driver.getExpectedIndex())
     }
 
@@ -64,7 +67,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     
 
     let columnVars : any = Array.from({length: columnCount})
-
+    console.log(columnCount)
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
             keySpaceName = bufferToString(buf.slice(stringLen))
@@ -84,7 +87,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     }
     
     const rowCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
-    //console.log(rowCount)
+    console.log(rowCount)
     stringLen += 4
     let rows : any[] = Array.from({length: rowCount})
     for (let i = 0; i < rowCount; ++i) {
@@ -135,7 +138,7 @@ const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void
 
 const getPreparedResult = (buf : Buffer) : string => {
     console.log(buf)
-    return Number(format(bufferToShortBytes(buf).shortBytes)).toString()
+    return BigInt(format(bufferToShortBytes(buf).shortBytes)).toString()
 }
 
 const getSchemaChangeResult = (buf : Buffer) : string => {
