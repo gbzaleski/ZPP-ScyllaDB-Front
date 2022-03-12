@@ -50,7 +50,7 @@ export type Option = {
     size : number
 }
 
-export type shortBytes = {
+export type ShortBytes = {
     length: Short
     shortBytes: Buffer
 }

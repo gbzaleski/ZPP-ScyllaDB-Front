@@ -3,6 +3,7 @@ import {
     bufferToBytes,
     bufferToInt,
     bufferToOption,
+    bufferToShortBytes,
     bufferToString,
     bufferToStringList,
     optionToReadableString
@@ -16,19 +17,6 @@ const format = require("biguint-format");
 
 const getVoidResult = () : string => {
     return ""
-}
-
-class RowTable {
-    columns: number = 0
-    rows: number = 0
-
-    content : Array<Array<type | null>> = []
-
-    constructor(col: number, rows : number, con : Array<Array<type | null>>) {
-        this.columns = col;
-        this.rows = rows;
-        this.content = con;
-    }
 }
 
 const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array<string>> => {
@@ -50,7 +38,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     stringLen += 4
     const columnCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
     stringLen += 4
-    
+
     if (hasMorePages) {
         const pagingState = bufferToBytes(buf.slice(stringLen))
         if (pagingState != null) {
@@ -145,8 +133,9 @@ const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void
     return response
 }
 
-const getPreparedResult = () => {
-
+const getPreparedResult = (buf : Buffer) : string => {
+    console.log(buf)
+    return Number(format(bufferToShortBytes(buf).shortBytes)).toString()
 }
 
 const getSchemaChangeResult = (buf : Buffer) : string => {
@@ -200,10 +189,9 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string
                 return getSetKeyspaceResult(body.slice(4, Number(length)), setKeyspace);
             }
             case 4: {
-                return "Prepared";
+                return getPreparedResult(body.slice(4, Number(length)));
             }
             case 5: {
-                //return "ScehmaChange";
                 return getSchemaChangeResult(body.slice(4, Number(length)));
             }
         }
