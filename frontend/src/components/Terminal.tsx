@@ -5,6 +5,7 @@ import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
 import ServerResponse from "./ServerResponse";
 import {CQLDriver} from "../CQL-Driver/src/Driver";
+import {DEFAULT_PAGING_VALUE} from "../consts"
 
 const Terminal = () => {
     const [command, setCommand] = useState("");
@@ -15,7 +16,6 @@ const Terminal = () => {
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
     const [pagingValue, setPagingValue] = useState<Number>(0); // 0 = OFF , Positive value > ON, assuming 40 or smth as default value for paging on
-    const DEFAULT_PAGING_VALUE = 40;
 
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
