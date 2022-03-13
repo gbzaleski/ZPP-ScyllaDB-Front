@@ -126,27 +126,22 @@ const Terminal = () => {
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PAGING") {
                         // Rest of arguments are ignored - we can change it for required precise 2 arguemnts
 
-                        // TODO: Fix "delay"
                         console.log("Setting paging from: ", pagingValue, tokenizedCommand)
 
-                        const newPagingValue = tokenizedCommand[1];
+                        const newPagingValue = tokenizedCommand[1].trim();
                         if (newPagingValue === "OFF")
                         {
                             setPagingValue(0)
-                            console.log("Set paging to ", pagingValue)
                         }
                         else if (newPagingValue === "ON" && pagingValue === 0)
                         {
                             setPagingValue(DEFAULT_PAGING_VALUE)
-                            console.log("Set paging to ", pagingValue, DEFAULT_PAGING_VALUE)
                         }
                         else if (pagingValue > 0 && parseInt(newPagingValue) > 0)
                         {
                             setPagingValue(parseInt(newPagingValue))
-                            console.log("Set paging to ", pagingValue)
                         }
 
-                        console.log("Now paging is: ", pagingValue, newPagingValue)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setServerResponse("")
                         setCommand("");
