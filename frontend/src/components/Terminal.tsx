@@ -14,6 +14,8 @@ const Terminal = () => {
     const [serverResponse, setServerResponse] = useState<string>("");
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
+    const [pagingValue, setPagingValue] = useState<Number>(0); // 0 = OFF , Positive value > ON, assuming 40 or smth as default value for paging on
+    const DEFAULT_PAGING_VALUE = 40;
 
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
@@ -118,6 +120,35 @@ const Terminal = () => {
                         setServerResponse("")
                         sendHandshake();
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setTableResponse([]);
+                        setPositionInHistory(commandHistory.length + 1);
+                    } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PAGING") {
+                        // Rest of arguments are ignored - we can change it for required precise 2 arguemnts
+
+                        // TODO: Fix "delay"
+                        console.log("Setting paging from: ", pagingValue, tokenizedCommand)
+
+                        const newPagingValue = tokenizedCommand[1];
+                        if (newPagingValue === "OFF")
+                        {
+                            setPagingValue(0)
+                            console.log("Set paging to ", pagingValue)
+                        }
+                        else if (newPagingValue === "ON" && pagingValue === 0)
+                        {
+                            setPagingValue(DEFAULT_PAGING_VALUE)
+                            console.log("Set paging to ", pagingValue, DEFAULT_PAGING_VALUE)
+                        }
+                        else if (pagingValue > 0 && parseInt(newPagingValue) > 0)
+                        {
+                            setPagingValue(parseInt(newPagingValue))
+                            console.log("Set paging to ", pagingValue)
+                        }
+
+                        console.log("Now paging is: ", pagingValue, newPagingValue)
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setServerResponse("")
                         setCommand("");
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
