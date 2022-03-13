@@ -152,6 +152,36 @@ const Terminal = () => {
                         setCommand("");
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
+                    } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PREPARE") {
+
+                        const prepareArg = tokenizedCommand[1]
+                        console.log("Preparing ", prepareArg)
+
+                        // Tu jakies wysłanie tego
+
+
+                        // Tu jakis odbiór
+                        
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setServerResponse("")
+                        setTableResponse([]);
+                        setPositionInHistory(commandHistory.length + 1);
+                    } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "EXECUTE") {
+                        
+                        const executeArgs = tokenizedCommand.slice(1);
+                        console.log("Executing ", executeArgs)
+
+                        // Tu jakies wysłanie tego
+
+
+                        // Tu jakis odbiór
+
+                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
+                        setCommand("");
+                        setServerResponse("")
+                        setTableResponse([]);
+                        setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 1 && tokenizedCommand[0] == "CONSISTENCY") {
                         setServerResponse("Current consistency level is " + driver.getConsistency() + ".")
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
