@@ -24,14 +24,12 @@ const Terminal = () => {
     const classes = useStyles();
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setCommand(event.target.value);
-    }
+        setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
+            event.target.value.slice(1) : event.target.value);
+    } 
 
     const clearInput = () => {
         setCommand("");
-        console.log(textAreaRef.current)
-        
-        // TODO: Fix this
 
         if (textAreaRef && textAreaRef.current && textAreaRef.current.selectionStart 
             && textAreaRef.current.selectionEnd)
@@ -41,8 +39,6 @@ const Terminal = () => {
             textAreaRef.current.setSelectionRange(0, 0)
             textAreaRef.current.focus();
         }
-
-        console.log(textAreaRef.current)
     }
 
     // Send a msg to the websocket
