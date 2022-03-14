@@ -17,12 +17,32 @@ const Terminal = () => {
     const [editMode, setEditMode] = useState(false);
     const [pagingValue, setPagingValue] = useState<Number>(0); // 0 = OFF , Positive value > ON, assuming 40 or smth as default value for paging on
 
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value);
+    }
+
+    const clearInput = () => {
+        setCommand("");
+        console.log(textAreaRef.current)
+        
+        // TODO: Fix this
+
+        if (textAreaRef && textAreaRef.current && textAreaRef.current.selectionStart 
+            && textAreaRef.current.selectionEnd)
+        {
+            textAreaRef.current.selectionStart = 0;
+            textAreaRef.current.selectionEnd = 0;
+            textAreaRef.current.setSelectionRange(0, 0)
+            textAreaRef.current.focus();
+        }
+
+        console.log(textAreaRef.current)
     }
 
     // Send a msg to the websocket
@@ -73,7 +93,7 @@ const Terminal = () => {
                     {
                         setEditMode(true)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     }
@@ -81,7 +101,7 @@ const Terminal = () => {
                     {
                         setEditMode(false)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1)
                     }
@@ -103,14 +123,14 @@ const Terminal = () => {
                         console.log("Using mock table", mock_table)
 
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setPositionInHistory(commandHistory.length + 1)
                         setServerResponse("")
                         setTableResponse(mock_table)
                     }
                     else if (command.toLowerCase().trim() == "clear")
                     {
-                        setCommand("");
+                        clearInput();
                         setServerResponse("");
                         setPositionInHistory(0);
                         setCommandHistory([]);
@@ -120,7 +140,7 @@ const Terminal = () => {
                         setServerResponse("")
                         sendHandshake();
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PAGING") {
@@ -144,7 +164,7 @@ const Terminal = () => {
 
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setServerResponse("")
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PREPARE") {
@@ -158,7 +178,7 @@ const Terminal = () => {
                         // Tu jakis odbiór
                         sendMsg(driver.prepare(prepareArg))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setServerResponse("")
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
@@ -173,14 +193,14 @@ const Terminal = () => {
                         // Tu jakis odbiór
                         sendMsg(driver.execute(executeArgs[0]))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setServerResponse("")
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 1 && tokenizedCommand[0] == "CONSISTENCY") {
                         setServerResponse("Current consistency level is " + driver.getConsistency() + ".")
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 2 && tokenizedCommand[0] == "CONSISTENCY") {
@@ -188,7 +208,7 @@ const Terminal = () => {
                             "Successfully changed consistency level to " + tokenizedCommand[1] + "." :
                             "Invalid consistency level")
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (command && command.length)
@@ -199,7 +219,7 @@ const Terminal = () => {
                         setServerResponse("")
                         sendMsg(driver.query(command));
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     }
@@ -212,7 +232,7 @@ const Terminal = () => {
 
                         // Dependently on position command is either retrieved from history or empty
                         if (positionInHistory + 1 == commandHistory.length) {
-                            setCommand("")
+                            clearInput();
                         } else {
                             setCommand(commandHistory[positionInHistory + 1]);
                         }
@@ -241,7 +261,12 @@ const Terminal = () => {
             <TerminalHistory
                 history={commandHistory}
             />
-            <Input value={command} keyspaceName={driver.getKeyspace()} changeValue={changeCommand}/>
+            <Input 
+                value={command} 
+                keyspaceName={driver.getKeyspace()} 
+                changeValue={changeCommand}
+                ref={textAreaRef}
+            />
              <ServerResponse
                 websocket={webSocket}
                 response={serverResponse}
