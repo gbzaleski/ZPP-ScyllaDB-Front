@@ -1,5 +1,5 @@
 import {Buffer} from 'buffer';
-import {bufferToBytes, bufferToInt, numberToInt} from "../utils/conversions";
+import {bufferToBytes} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
 import {stringify} from 'uuid'
@@ -244,18 +244,18 @@ export class TIME implements type {
     #nanoseconds :bigint = 0n
     #hoursRatio : bigint = 3600000000000n
     #minutesRatio : bigint = 60000000000n
-    #secondsRatio : bigint = 60000000000n
+    #secondsRatio : bigint = 1000000000n
 
 
     constructor(data: Buffer) {
-        this.#nanoseconds = data.slice(0, 8).readBigInt64BE(0)
+        this.#nanoseconds = BigInt(data.slice(0, 4).readInt32BE(0)) * BigInt(Math.pow(2,32)) + BigInt(data.slice(4, 8).readInt32BE(0))
         if (0 < this.#nanoseconds && this.#nanoseconds < 86399999999999) {
             this.#hours = this.#nanoseconds / this.#hoursRatio
             this.#nanoseconds -= this.#hours * this.#hoursRatio
-
+            console.log(this.#nanoseconds)
             this.#minutes = this.#nanoseconds / this.#minutesRatio
             this.#nanoseconds -= this.#minutes * this.#minutesRatio
-
+            console.log(this.#nanoseconds)
             this.#seconds = this.#nanoseconds / this.#secondsRatio
             this.#nanoseconds -= this.#hours * this.#secondsRatio
         }
