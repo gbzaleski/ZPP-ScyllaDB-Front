@@ -9,7 +9,7 @@ const TerminalHistory = ({ history } : TerminalHistoryProp) : JSX.Element =>
 {
     const classes = useStyles();
     const list = history.map((e, i) => e ?
-        <div>
+        <div key={"history-upper-" + i}>
             <div className={classes.lineContainer}>
                 <div className={classes.terminalSign}>
                     {'>'}
@@ -17,7 +17,7 @@ const TerminalHistory = ({ history } : TerminalHistoryProp) : JSX.Element =>
                 <div className={classes.inputContainer}>{e}</div>
             </div>
         </div> :
-        <div className={classes.inputContainer} key = {i}>
+        <div className={classes.inputContainer} key={"history-lower-" + i}>
             {'> '}
         </div>)
 

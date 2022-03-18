@@ -15,18 +15,20 @@ class CQLDriver {
     #pagingStates : Array<Bytes>
     #pagingIndex : number
     #lastQuery: string
+    #lastQueryType : string
     #expectedIndex : number
     #expectingNewQuery : boolean
 
     constructor() {
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
-        this.#pageSize = 2
+        this.#pageSize = 6
         this.#pagingEnabled = true
         this.#pagingStates = []
         this.#pagingIndex = -1
         this.#expectedIndex = 0
         this.#lastQuery = ""
+        this.#lastQueryType = "QUERY"
         this.#expectingNewQuery = true
     }
 
@@ -35,6 +37,7 @@ class CQLDriver {
     query = (body : string, pagingState? : Bytes) : Buffer => {
         this.#expectedIndex = 0
         this.clearPagingStates()
+        this.#lastQueryType = "QUERY"
         return getQueryMessage(this, body, this.#setLastQuery, pagingState);
     }
 
@@ -43,10 +46,14 @@ class CQLDriver {
     }
 
     execute = (body : string) : Buffer => {
-        return getExecuteMessage(body)
+        this.#expectedIndex = 0
+        this.clearPagingStates()
+        this.#lastQueryType = "EXECUTE"
+        return getExecuteMessage(this, body, this.#setLastQuery);
     }
 
     getNextPageQuery = () : Buffer | null => {
+        console.log(this.#pagingStates)
         const wantedIndex = this.#pagingIndex + 1
         return this.#getQueryPageAt(wantedIndex)
     }
@@ -65,12 +72,19 @@ class CQLDriver {
         this.#expectedIndex = index
 
         if (isFirstPage && pagingState == null) {
-            return getQueryMessage(this, this.#lastQuery, this.#setLastQuery);
+            if (this.#lastQueryType == "EXECUTE") {
+                return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery);
+            } else {
+                return getQueryMessage(this, this.#lastQuery, this.#setLastQuery);
+            }
         } else if (pagingState == null) {
             return null
         }
-
-        return getQueryMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
+        if (this.#lastQueryType == "EXECUTE") {
+            return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
+        } else {
+            return getQueryMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
+        }
     }
 
     getExpectedIndex = () : number => {

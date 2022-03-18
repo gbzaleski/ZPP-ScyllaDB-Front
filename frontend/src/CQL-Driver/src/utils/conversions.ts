@@ -174,11 +174,29 @@ export const bufferToStringList = (buf : Buffer) : StringList => {
     return  {length: numberToShort(len), stringList: result}
 }
 
-const bigIntToBuffer = (value : bigint, size : number) : Buffer => {
-    let buf = Buffer.alloc(size);
-    for (let i = size - 1; i >= 0; --i) {
-        buf[i] = Number(value & BigInt(0xff));
-        value >>= 8n;
+export const bigIntToBuffer = (value : bigint, size? : number) : Buffer => {
+    if (!size) {
+        console.log(value)
+        let tempSize = 1, mul = 256n
+        while (value >= mul) {
+            mul *= 256n
+            tempSize += 1
+        }
+        size = tempSize
+        console.log(size)
+        let buf = Buffer.alloc(size);
+        for (let i = size - 1; i >= 0; --i) {
+            buf[i] = Number(value & BigInt(0xff));
+            value >>= 8n;
+        }
+        console.log(buf, buf.length)
+        return buf;
+    } else {
+        let buf = Buffer.alloc(size);
+        for (let i = size - 1; i >= 0; --i) {
+            buf[i] = Number(value & BigInt(0xff));
+            value >>= 8n;
+        }
+        return buf;
     }
-    return buf;
 }
