@@ -257,22 +257,71 @@ export class TIME implements type {
             this.#nanoseconds -= this.#minutes * this.#minutesRatio
             console.log(this.#nanoseconds)
             this.#seconds = this.#nanoseconds / this.#secondsRatio
-            this.#nanoseconds -= this.#hours * this.#secondsRatio
+            this.#nanoseconds -= this.#seconds * this.#secondsRatio
         }
     }
 
     toString() {
-        return this.#hours + ":" + this.#minutes + ":" + this.#seconds
+        let result = this.#hours + ":" + this.#minutes + ":" + this.#seconds
+        if (this.#nanoseconds > 0) {
+            result += "." + this.#nanoseconds
+        }
+        return result
     }
 }
 
-class TIMESTAMP implements type {
+export class DATE implements type {
+
+    #value : Date = new Date(0)
+    #days = 0
+
+    constructor(data: Buffer) {
+        this.#days = data.slice(0, 4).readUInt32BE(0) - Math.pow(2, 31)
+        this.#value = new Date(this.#days * 8.64e7)
+    }
+
     toString() {
-        return ""
+        if (isNaN(this.#value.getUTCFullYear())) {
+            return this.#days.toString() + " days from 1970-01-01"
+        }
+      
+        return this.#value.getUTCFullYear() + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate() 
     }
 }
 
-class TINYINT implements type {
+export class TIMESTAMP implements type {
+    #value : Date = new Date(0)
+    #miliseconds = 0
+
+    constructor(data: Buffer) {
+        this.#miliseconds = data.slice(0, 4).readUInt32BE(0) * Math.pow(2, 32) + data.slice(4, 8).readUInt32BE(0)
+        this.#value = new Date(this.#miliseconds)
+    }
+
+    toString() {
+        if (isNaN(this.#value.getUTCFullYear())) {
+            return this.#miliseconds.toString()
+        }
+      
+        console.log(this.#value.toString())
+        let result = this.#value.getUTCFullYear()  + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate()
+        + " " + this.#value.getUTCHours() + ":" + this.#value.getUTCMinutes()
+
+        if (this.#value.getUTCSeconds() > 0) {
+            result += ":" + this.#value.getUTCSeconds()
+        }
+        
+        if (this.#value.getUTCMilliseconds() > 0) {
+            result += "." + this.#value.getUTCMilliseconds()
+        }
+
+        result += "+" + (this.#value.getTimezoneOffset() / -60)
+
+        return result
+    }
+}
+
+export class TINYINT implements type {
     value : number = 0
 
     constructor(data: Buffer) {
