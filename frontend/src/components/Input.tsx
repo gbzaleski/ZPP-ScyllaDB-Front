@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import {makeStyles} from "@material-ui/core/styles";
 
 interface InputProps {
@@ -7,7 +7,8 @@ interface InputProps {
     changeValue: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
 }
 
-const Input = ({value, keyspaceName, changeValue}: InputProps) => {
+const Input = forwardRef<HTMLTextAreaElement, InputProps>(({value, keyspaceName, changeValue}, ref) => {
+
     const classes = useStyles();
 
     return(
@@ -22,14 +23,16 @@ const Input = ({value, keyspaceName, changeValue}: InputProps) => {
                 </div>
                 <textarea
                     className={classes.inputContainer}
+                    defaultValue=""
                     value={value}
                     onChange={changeValue}
-                    id={"inputTextArea"}
+                    ref={ref}
+                    id="inputTextArea"
                 />
             </div>
         </div>
     );
-}
+});
 
 const useStyles = makeStyles(theme => ({
     lineContainer:  {

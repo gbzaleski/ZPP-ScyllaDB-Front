@@ -5,6 +5,7 @@ import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
 import ServerResponse from "./ServerResponse";
 import {CQLDriver} from "../CQL-Driver/src/Driver";
+import {DEFAULT_PAGING_VALUE} from "../consts"
 
 const Terminal = () => {
     const [command, setCommand] = useState("");
@@ -15,14 +16,29 @@ const Terminal = () => {
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
     const [pagingValue, setPagingValue] = useState<Number>(0); // 0 = OFF , Positive value > ON, assuming 40 or smth as default value for paging on
-    const DEFAULT_PAGING_VALUE = 40;
+
+    const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setCommand(event.target.value);
+        setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
+            event.target.value.slice(1) : event.target.value);
+    } 
+
+    const clearInput = () => {
+        setCommand("");
+
+        if (textAreaRef && textAreaRef.current && textAreaRef.current.selectionStart 
+            && textAreaRef.current.selectionEnd)
+        {
+            textAreaRef.current.selectionStart = 0;
+            textAreaRef.current.selectionEnd = 0;
+            textAreaRef.current.setSelectionRange(0, 0)
+            textAreaRef.current.focus();
+        }
     }
 
     // Send a msg to the websocket
@@ -73,7 +89,7 @@ const Terminal = () => {
                     {
                         setEditMode(true)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     }
@@ -81,7 +97,7 @@ const Terminal = () => {
                     {
                         setEditMode(false)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1)
                     }
@@ -103,14 +119,14 @@ const Terminal = () => {
                         console.log("Using mock table", mock_table)
 
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setPositionInHistory(commandHistory.length + 1)
                         setServerResponse("")
                         setTableResponse(mock_table)
                     }
                     else if (command.toLowerCase().trim() == "clear")
                     {
-                        setCommand("");
+                        clearInput();
                         setServerResponse("");
                         setPositionInHistory(0);
                         setCommandHistory([]);
@@ -120,36 +136,31 @@ const Terminal = () => {
                         setServerResponse("")
                         sendHandshake();
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PAGING") {
                         // Rest of arguments are ignored - we can change it for required precise 2 arguemnts
 
-                        // TODO: Fix "delay"
                         console.log("Setting paging from: ", pagingValue, tokenizedCommand)
 
-                        const newPagingValue = tokenizedCommand[1];
+                        const newPagingValue = tokenizedCommand[1].trim();
                         if (newPagingValue === "OFF")
                         {
                             setPagingValue(0)
-                            console.log("Set paging to ", pagingValue)
                         }
                         else if (newPagingValue === "ON" && pagingValue === 0)
                         {
                             setPagingValue(DEFAULT_PAGING_VALUE)
-                            console.log("Set paging to ", pagingValue, DEFAULT_PAGING_VALUE)
                         }
                         else if (pagingValue > 0 && parseInt(newPagingValue) > 0)
                         {
                             setPagingValue(parseInt(newPagingValue))
-                            console.log("Set paging to ", pagingValue)
                         }
 
-                        console.log("Now paging is: ", pagingValue, newPagingValue)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         setServerResponse("")
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PREPARE") {
@@ -163,7 +174,7 @@ const Terminal = () => {
                         // Tu jakis odbiór
                         sendMsg(driver.prepare(prepareArg))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setServerResponse("")
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
@@ -178,14 +189,14 @@ const Terminal = () => {
                         // Tu jakis odbiór
                         sendMsg(driver.execute(executeArgs[0]))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setServerResponse("")
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 1 && tokenizedCommand[0] == "CONSISTENCY") {
                         setServerResponse("Current consistency level is " + driver.getConsistency() + ".")
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 2 && tokenizedCommand[0] == "CONSISTENCY") {
@@ -193,7 +204,7 @@ const Terminal = () => {
                             "Successfully changed consistency level to " + tokenizedCommand[1] + "." :
                             "Invalid consistency level")
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (command && command.length)
@@ -204,7 +215,7 @@ const Terminal = () => {
                         setServerResponse("")
                         sendMsg(driver.query(command));
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setCommand("");
+                        clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     }
@@ -217,7 +228,7 @@ const Terminal = () => {
 
                         // Dependently on position command is either retrieved from history or empty
                         if (positionInHistory + 1 == commandHistory.length) {
-                            setCommand("")
+                            clearInput();
                         } else {
                             setCommand(commandHistory[positionInHistory + 1]);
                         }
@@ -246,7 +257,12 @@ const Terminal = () => {
             <TerminalHistory
                 history={commandHistory}
             />
-            <Input value={command} keyspaceName={driver.getKeyspace()} changeValue={changeCommand}/>
+            <Input 
+                value={command} 
+                keyspaceName={driver.getKeyspace()} 
+                changeValue={changeCommand}
+                ref={textAreaRef}
+            />
              <ServerResponse
                 websocket={webSocket}
                 response={serverResponse}
