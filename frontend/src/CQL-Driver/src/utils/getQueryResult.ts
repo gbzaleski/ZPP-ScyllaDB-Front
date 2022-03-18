@@ -3,10 +3,12 @@ import {
     bufferToBytes,
     bufferToInt,
     bufferToOption,
+    bufferToShort,
     bufferToShortBytes,
     bufferToString,
     bufferToStringList
 } from "./conversions";
+import {Option} from "./types";
 import getLength from "./getLength";
 import { getOpcodeName } from "./getOpcode";
 import { getTypeFrom } from "../cql-types/typeFactory";
@@ -141,9 +143,51 @@ const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void
     return response
 }
 
-const getPreparedResult = (buf : Buffer) : string => {
-    console.log(buf)
-    return BigInt(format(bufferToShortBytes(buf).shortBytes)).toString()
+const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : string => {
+    const idBuffer = bufferToShortBytes(buf).shortBytes
+    const id = BigInt(format(bufferToShortBytes(buf).shortBytes))
+    let globalTableSpecPresent = false
+
+
+    buf = buf.slice(idBuffer.length + 2)
+    const metaDataFlags = Number(format(bufferToInt(buf).int))
+
+    if (metaDataFlags & 1) {
+        globalTableSpecPresent = true
+    }
+
+    buf = buf.slice(4)
+    const columnCount = Number(format(bufferToInt(buf).int))
+    buf = buf.slice(4)
+    const pkCount = Number(format(bufferToInt(buf).int))
+    buf = buf.slice(4)
+    console.log(pkCount)
+    for (let i = 0; i < pkCount; ++i) {
+        const pkIndex = Number(format(bufferToShort(buf).short))
+        buf = buf.slice(2)
+    }
+    let columnValues : Array<Option> = Array.from({length: columnCount})
+    let keySpaceName, tableName
+    console.log(columnCount)
+    for (let i = 0; i < columnCount; ++i) {
+        if (!globalTableSpecPresent) {
+            keySpaceName = bufferToString(buf)
+            buf.slice(Number(format(keySpaceName.length.short)) + 2)
+            tableName = bufferToString(buf)
+            buf.slice(Number(format(tableName.length.short)) + 2)
+        }
+        
+        let columnName = bufferToString(buf)
+        buf = buf.slice(Number(format(columnName.length.short)) + 2)
+        let columnType = bufferToOption(buf)
+        columnValues[i] = columnType
+        //console.log(columnType)
+        buf = buf.slice(columnType.size + 2)
+    }
+    console.log(columnValues)
+    addPreparedStatement(id, columnValues)
+
+    return "Prepared statement with id " + id.toString()
 }
 
 const getSchemaChangeResult = (buf : Buffer) : string => {
@@ -176,7 +220,7 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
     return changeType + " " + target + " " + option
 }
 
-const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string | Array<Array<string>> => {
+const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPreparedStatement : any) : string | Array<Array<string>> => {
 
     //console.log(buffer)
     const length = getLength(buffer)
@@ -197,7 +241,7 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any) : string
                 return getSetKeyspaceResult(body.slice(4, Number(length)), setKeyspace);
             }
             case 4: {
-                return getPreparedResult(body.slice(4, Number(length)));
+                return getPreparedResult(body.slice(4, Number(length)), addPreparedStatement);
             }
             case 5: {
                 return getSchemaChangeResult(body.slice(4, Number(length)));

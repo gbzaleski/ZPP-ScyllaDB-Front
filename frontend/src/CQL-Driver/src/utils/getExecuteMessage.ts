@@ -6,14 +6,14 @@ import setLength from "./setLength";
 import {bigIntToBuffer, numberToByte, numberToInt, numberToShort, tokensToValues} from "./conversions";
 import addExecuteBody from "./addExecuteBody";
 import { CQLDriver } from "../Driver";
-import { Bytes } from "./types";
+import { Bytes, Option } from "./types";
 const format = require("biguint-format");
 
 const ValuesFlag : bigint = 1n
 const PageSizeFlagValue : bigint = 4n
 const NextPageFlagValue : bigint = 8n
 
-const getExecuteMessage = (driver : CQLDriver, queryId: string, setLastQuery : any, bindValues : Array<string>, pagingState? : Bytes) : Buffer => {
+const getExecuteMessage = (driver : CQLDriver, queryId: string, setLastQuery : any, bindValues : Array<string>, bindTypes : Array<Option>, pagingState? : Bytes) : Buffer => {
     let buffer = Frame();
 
     setLastQuery(queryId)
