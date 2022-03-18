@@ -2,7 +2,7 @@ import {Buffer} from 'buffer';
 import {bufferToBytes} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
-import {stringify} from 'uuid'
+import {stringify, parse} from 'uuid'
 
 export interface type {
     toString() : string;
@@ -483,8 +483,11 @@ export class UUID implements type {
     #value : string = ""
 
     constructor(data: Buffer | string) {
+        console.log(data)
         if (data instanceof Buffer) {
             this.#value = stringify(data)
+        } else {
+            this.#value = data
         }
     }
 
@@ -493,7 +496,8 @@ export class UUID implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+       
+        return Buffer.from(Array.from(parse(this.#value)))
     }
 }
 

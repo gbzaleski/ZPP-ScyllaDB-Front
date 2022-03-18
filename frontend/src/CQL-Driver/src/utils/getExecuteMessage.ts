@@ -29,7 +29,7 @@ const getExecuteMessage = (driver : CQLDriver, queryId: string, setLastQuery : a
 
     if (bindValues != []) {
         flagValue += ValuesFlag
-        extraData = Buffer.concat([extraData, tokensToValues(bindValues)])
+        extraData = Buffer.concat([extraData, tokensToValues(bindTypes, bindValues)])
     }
 
     // If paging is enabled we add flag value and insert page size into extraData

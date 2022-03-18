@@ -31,7 +31,6 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     }
     if (metaDataFlags & 2) {
         hasMorePages = true
-        console.log("wincej page'y")
     }
     if (metaDataFlags & 4) {
         noMetaData = true
@@ -51,9 +50,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
         } else {
             stringLen += 4
         }
-        console.log(pagingState)
     } else {
-       console.log(buf)
        driver.setPageNumber(driver.getExpectedIndex())
     }
 
@@ -67,7 +64,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     
 
     let columnVars : any = Array.from({length: columnCount})
-    console.log(columnCount)
+  
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
             keySpaceName = bufferToString(buf.slice(stringLen))
@@ -77,26 +74,24 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
         }
         
         let columnName = bufferToString(buf.slice(stringLen))
-        console.log(columnName.string.toString())
+ 
         stringLen += Number(format(columnName.length.short)) + 2
         let columnType = bufferToOption(buf.slice(stringLen))
-        console.log(format(columnType.id.short))
+    
         columnVars[i] = {name: columnName, type: columnType}
         //console.log(columnType)
         stringLen += columnType.size + 2
     }
     
     const rowCount = Number(format(bufferToInt(buf.slice(stringLen)).int))
-    console.log(rowCount)
+
     stringLen += 4
     let rows : any[] = Array.from({length: rowCount})
-    console.log(rowCount)
+
     for (let i = 0; i < rowCount; ++i) {
         let row : any = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            console.log(buf.slice(stringLen))
             row[j] = bufferToBytes(buf.slice(stringLen))
-            console.log(row[j])
             stringLen += 4
             if (row[j] != null) {
                 stringLen += Number(format(row[j].length.int))
@@ -116,7 +111,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     for (let i = 1; i <= rowCount; ++i) {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            console.log(format(columnVars[j].type.id.short))
+            //console.log(format(columnVars[j].type.id.short))
             if (rows[i - 1][j] != null) {
             //console.log()
                 const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
@@ -128,7 +123,6 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
             } else {
                 content[i][j] = "null"
             }
-            //content[i] = 
             
         }
     }
@@ -147,41 +141,52 @@ const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : string =>
     const idBuffer = bufferToShortBytes(buf).shortBytes
     const id = BigInt(format(bufferToShortBytes(buf).shortBytes))
     let globalTableSpecPresent = false
-
-
     buf = buf.slice(idBuffer.length + 2)
     const metaDataFlags = Number(format(bufferToInt(buf).int))
 
     if (metaDataFlags & 1) {
         globalTableSpecPresent = true
     }
-
+    console.log(globalTableSpecPresent)
+    
     buf = buf.slice(4)
+    
     const columnCount = Number(format(bufferToInt(buf).int))
     buf = buf.slice(4)
     const pkCount = Number(format(bufferToInt(buf).int))
     buf = buf.slice(4)
     console.log(pkCount)
+    
     for (let i = 0; i < pkCount; ++i) {
         const pkIndex = Number(format(bufferToShort(buf).short))
         buf = buf.slice(2)
     }
     let columnValues : Array<Option> = Array.from({length: columnCount})
+   
     let keySpaceName, tableName
+    if (globalTableSpecPresent) {
+        keySpaceName = bufferToString(buf)
+        buf = buf.slice(keySpaceName.string.length + 2)
+        tableName = bufferToString(buf)
+        buf = buf.slice(tableName.string.length + 2)
+    }
     console.log(columnCount)
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
             keySpaceName = bufferToString(buf)
+            console.log(keySpaceName)
             buf.slice(Number(format(keySpaceName.length.short)) + 2)
             tableName = bufferToString(buf)
+            console.log(tableName)
             buf.slice(Number(format(tableName.length.short)) + 2)
         }
         
         let columnName = bufferToString(buf)
+        console.log(columnName)
         buf = buf.slice(Number(format(columnName.length.short)) + 2)
         let columnType = bufferToOption(buf)
         columnValues[i] = columnType
-        //console.log(columnType)
+        console.log(columnType)
         buf = buf.slice(columnType.size + 2)
     }
     console.log(columnValues)
