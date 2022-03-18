@@ -17,7 +17,7 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
 
     useEffect(() => {
         // Create WebSocket connection.
-        websocket.current = new WebSocket('ws://localhost:8222', "echo");
+        websocket.current = new WebSocket('ws://localhost:8222');
         console.log(websocket.current)
 
         // Connection opened
