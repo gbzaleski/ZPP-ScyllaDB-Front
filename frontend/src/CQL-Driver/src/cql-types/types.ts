@@ -1,5 +1,5 @@
-import {Blob, Buffer} from 'buffer';
-import {bufferToBytes, bufferToInt, numberToInt} from "../utils/conversions";
+import {Buffer} from 'buffer';
+import {bufferToBytes} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
 import {stringify} from 'uuid'
@@ -23,7 +23,7 @@ export class ASCII implements type {
     }
 
     toString() {
-        return ""
+        return this.asciiText
     }
 }
 
@@ -36,20 +36,21 @@ export class BIGINT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 
 // Blob is just a sequence of bytes
 export class BLOB implements type {
-    value: Blob = new Blob([""]);
-     
+    
+    #value : BigInt = 0n
+
     constructor(data : Buffer) {
-        this.value =  new Blob([new Uint8Array(data)])
+        this.#value = BigInt(format(data))
     }
 
     toString() {
-        return ""
+        return "0x" + this.#value.toString(16)
     }
 }
 
@@ -97,7 +98,7 @@ export class DOUBLE implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 
@@ -108,7 +109,7 @@ export class FLOAT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 export class INET implements type {
@@ -119,7 +120,13 @@ export class INET implements type {
     }
 
     toString() {
-        return ""
+        if (this.address.length == 4) {
+            return this.address.join('.').toString()
+        } else if (this.address.length == 6) {
+            return "unimplemented"
+        } else {
+            return "invalid address"
+        }
     }
 }
 
@@ -161,7 +168,6 @@ export class MAP implements type {
 
     constructor(data: Buffer, value : any) {
         const [firstVal, secondVal] = value
-        //console.log(firstVal, secondVal)
         const n = data.readInt32BE(0)
         let dataPart = data.slice(4)
         this.container = Array.from({length: n})
@@ -211,6 +217,7 @@ export class SET implements type {
                 data = data.slice(bytes.bytes.length + 4)
             }
         }
+        //console.log(this.list.toString())
     }
 
     toString() {
@@ -230,31 +237,91 @@ export class SMALLINT implements type {
     }
 }
 
-class TEXT implements type {
-   #value : string = ""
+export class TIME implements type {
+    #hours : bigint = 0n;
+    #minutes : bigint = 0n
+    #seconds : bigint = 0n
+    #nanoseconds :bigint = 0n
+    #hoursRatio : bigint = 3600000000000n
+    #minutesRatio : bigint = 60000000000n
+    #secondsRatio : bigint = 1000000000n
+
 
     constructor(data: Buffer) {
-        this.#value = data.toString('utf8')
+        this.#nanoseconds = BigInt(data.slice(0, 4).readInt32BE(0)) * BigInt(Math.pow(2,32)) + BigInt(data.slice(4, 8).readInt32BE(0))
+        if (0 < this.#nanoseconds && this.#nanoseconds < 86399999999999) {
+            this.#hours = this.#nanoseconds / this.#hoursRatio
+            this.#nanoseconds -= this.#hours * this.#hoursRatio
+            console.log(this.#nanoseconds)
+            this.#minutes = this.#nanoseconds / this.#minutesRatio
+            this.#nanoseconds -= this.#minutes * this.#minutesRatio
+            console.log(this.#nanoseconds)
+            this.#seconds = this.#nanoseconds / this.#secondsRatio
+            this.#nanoseconds -= this.#seconds * this.#secondsRatio
+        }
     }
 
     toString() {
-        return this.#value
+        let result = this.#hours + ":" + this.#minutes + ":" + this.#seconds
+        if (this.#nanoseconds > 0) {
+            result += "." + this.#nanoseconds
+        }
+        return result
     }
 }
 
-class TIME implements type {
+export class DATE implements type {
+
+    #value : Date = new Date(0)
+    #days = 0
+
+    constructor(data: Buffer) {
+        this.#days = data.slice(0, 4).readUInt32BE(0) - Math.pow(2, 31)
+        this.#value = new Date(this.#days * 8.64e7)
+    }
+
     toString() {
-        return ""
+        if (isNaN(this.#value.getUTCFullYear())) {
+            return this.#days.toString() + " days from 1970-01-01"
+        }
+      
+        return this.#value.getUTCFullYear() + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate() 
     }
 }
 
-class TIMESTAMP implements type {
+export class TIMESTAMP implements type {
+    #value : Date = new Date(0)
+    #miliseconds = 0
+
+    constructor(data: Buffer) {
+        this.#miliseconds = data.slice(0, 4).readUInt32BE(0) * Math.pow(2, 32) + data.slice(4, 8).readUInt32BE(0)
+        this.#value = new Date(this.#miliseconds)
+    }
+
     toString() {
-        return ""
+        if (isNaN(this.#value.getUTCFullYear())) {
+            return this.#miliseconds.toString()
+        }
+      
+        console.log(this.#value.toString())
+        let result = this.#value.getUTCFullYear()  + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate()
+        + " " + this.#value.getUTCHours() + ":" + this.#value.getUTCMinutes()
+
+        if (this.#value.getUTCSeconds() > 0) {
+            result += ":" + this.#value.getUTCSeconds()
+        }
+        
+        if (this.#value.getUTCMilliseconds() > 0) {
+            result += "." + this.#value.getUTCMilliseconds()
+        }
+
+        result += "+" + (this.#value.getTimezoneOffset() / -60)
+
+        return result
     }
 }
 
-class TINYINT implements type {
+export class TINYINT implements type {
     value : number = 0
 
     constructor(data: Buffer) {
@@ -262,7 +329,7 @@ class TINYINT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 }
 

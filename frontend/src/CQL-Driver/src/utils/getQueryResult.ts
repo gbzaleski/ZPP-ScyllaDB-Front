@@ -5,12 +5,10 @@ import {
     bufferToOption,
     bufferToShortBytes,
     bufferToString,
-    bufferToStringList,
-    optionToReadableString
+    bufferToStringList
 } from "./conversions";
 import getLength from "./getLength";
 import { getOpcodeName } from "./getOpcode";
-import {type} from "../cql-types/types";
 import { getTypeFrom } from "../cql-types/typeFactory";
 import { CQLDriver } from "../Driver";
 const format = require("biguint-format");
@@ -77,10 +75,10 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
         }
         
         let columnName = bufferToString(buf.slice(stringLen))
-        //console.log(columnName.string.toString())
+        console.log(columnName.string.toString())
         stringLen += Number(format(columnName.length.short)) + 2
         let columnType = bufferToOption(buf.slice(stringLen))
-        //console.log(format(columnType.id.short))
+        console.log(format(columnType.id.short))
         columnVars[i] = {name: columnName, type: columnType}
         //console.log(columnType)
         stringLen += columnType.size + 2
@@ -90,11 +88,13 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     console.log(rowCount)
     stringLen += 4
     let rows : any[] = Array.from({length: rowCount})
+    console.log(rowCount)
     for (let i = 0; i < rowCount; ++i) {
         let row : any = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
+            console.log(buf.slice(stringLen))
             row[j] = bufferToBytes(buf.slice(stringLen))
-            //console.log(row[j])
+            console.log(row[j])
             stringLen += 4
             if (row[j] != null) {
                 stringLen += Number(format(row[j].length.int))
@@ -109,20 +109,25 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
     for (let j = 0; j < columnCount; ++j) {
         content[0][j] = columnVars[j].name.string.toString()
     }
-    
-    //console.log(rowCount, columnCount)
+   
+    // Creating final array
     for (let i = 1; i <= rowCount; ++i) {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            //console.log(format(columnVars[j].type.id.short))
-            //console.log(rows[i - 1][j].bytes)
-            const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
-            //content[i] = 
-            if (receivedType != null) {
-                content[i][j] = receivedType.toString()
+            console.log(format(columnVars[j].type.id.short))
+            if (rows[i - 1][j] != null) {
+            //console.log()
+                const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
+                if (receivedType != null) {
+                    content[i][j] = receivedType.toString()
+                } else {
+                    content[i][j] = "null"
+                }
             } else {
                 content[i][j] = "null"
             }
+            //content[i] = 
+            
         }
     }
 

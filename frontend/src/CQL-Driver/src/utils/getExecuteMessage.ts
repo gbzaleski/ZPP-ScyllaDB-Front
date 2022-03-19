@@ -3,17 +3,17 @@ import setOpcode from "./setOpcode";
 import setVersion from "./setVersion";
 import {Buffer} from "buffer";
 import setLength from "./setLength";
-import {bigIntToBuffer, numberToByte, numberToInt, numberToShort} from "./conversions";
+import {bigIntToBuffer, numberToByte, numberToInt, numberToShort, tokensToValues} from "./conversions";
 import addExecuteBody from "./addExecuteBody";
 import { CQLDriver } from "../Driver";
 import { Bytes } from "./types";
 const format = require("biguint-format");
 
-
+const ValuesFlag : bigint = 1n
 const PageSizeFlagValue : bigint = 4n
 const NextPageFlagValue : bigint = 8n
 
-const getExecuteMessage = (driver : CQLDriver, queryId: string, setLastQuery : any, pagingState? : Bytes) : Buffer => {
+const getExecuteMessage = (driver : CQLDriver, queryId: string, setLastQuery : any, bindValues : Array<string>, pagingState? : Bytes) : Buffer => {
     let buffer = Frame();
 
     setLastQuery(queryId)
@@ -26,6 +26,11 @@ const getExecuteMessage = (driver : CQLDriver, queryId: string, setLastQuery : a
 
     let flagValue : bigint = 0n
     let extraData : Buffer = Buffer.alloc(0)
+
+    if (bindValues != []) {
+        flagValue += ValuesFlag
+        extraData = Buffer.concat([extraData, tokensToValues(bindValues)])
+    }
 
     // If paging is enabled we add flag value and insert page size into extraData
     if (pagingEnabled) {

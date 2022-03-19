@@ -180,14 +180,14 @@ const Terminal = () => {
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "EXECUTE") {
                         
-                        const executeArgs = tokenizedCommand.slice(1);
+                        const executeArgs : Array<string> = tokenizedCommand.slice(1);
                         console.log("Executing ", executeArgs)
 
                         // Tu jakies wysłanie tego
-
+                       
 
                         // Tu jakis odbiór
-                        sendMsg(driver.execute(executeArgs[0]))
+                        sendMsg(driver.execute(executeArgs[0], executeArgs.slice(1)))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setServerResponse("")
