@@ -2,28 +2,35 @@ import {Buffer} from 'buffer';
 import {bufferToBytes} from "../utils/conversions";
 import {getTypeFrom} from "./typeFactory";
 const format = require("biguint-format");
-import {stringify} from 'uuid'
+import {stringify, parse} from 'uuid'
 
 export interface type {
     toString() : string;
+    toCQL() : Buffer
 }
 
 export class ASCII implements type {
     validationError : boolean = false;
     asciiText : string = ""
 
-    constructor(data: Buffer) {
-        for (let pair of data.entries()) {
-            if (pair[1] > 127) {
-                this.validationError = true;
-                break;
-            }
-            this.asciiText += String.fromCharCode(pair[1])
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            for (let pair of data.entries()) {
+                if (pair[1] > 127) {
+                    this.validationError = true;
+                    break;
+                }
+                this.asciiText += String.fromCharCode(pair[1])
+           }
         }
     }
 
     toString() {
         return this.asciiText
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
@@ -31,12 +38,18 @@ export class ASCII implements type {
 export class BIGINT implements type {
     value : bigint = 0n
 
-    constructor(data: Buffer) {
-        this.value = data.readBigInt64BE();
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.value = data.readBigInt64BE();
+        }
     }
 
     toString() {
         return this.value.toString()
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
@@ -45,35 +58,50 @@ export class BLOB implements type {
     
     #value : BigInt = 0n
 
-    constructor(data : Buffer) {
-        this.#value = BigInt(format(data))
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.#value = BigInt(format(data))
+        }
     }
 
     toString() {
         return "0x" + this.#value.toString(16)
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class BOOLEAN implements type {
     value : boolean = false
-    constructor(data: Buffer) {
-        if (data.length && data[0] > 0) {
-            this.value = true;
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            if (data.length && data[0] > 0) {
+                this.value = true;
+            }
         }
     }
 
     toString() {
         return this.value ? "True" : "False"
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class COUNTER implements type {
-    constructor(data: Buffer) {
-
+    constructor(data: Buffer | string) {
     }
 
     toString() {
         return ""
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
@@ -81,42 +109,67 @@ export class COUNTER implements type {
 export class DECIMAL implements type {
     scale = 0n
     unscaled = 0n
-    constructor(data: Buffer) {
-        this.scale = BigInt(format(data.slice(0, 4)))
-        this.unscaled = BigInt(format(data.slice(4)))
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.scale = BigInt(format(data.slice(0, 4)))
+            this.unscaled = BigInt(format(data.slice(4)))
+        }
     }
 
     toString() {
         return ""
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class DOUBLE implements type {
     value : number
-    constructor(data: Buffer) {
-        this.value = data.readDoubleBE(0)
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.value = data.readDoubleBE(0)
+        } else {
+            this.value = 0
+        }
     }
 
     toString() {
         return this.value.toString()
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
 export class FLOAT implements type {
     value : number
-    constructor(data: Buffer) {
-        this.value = data.readFloatBE(0)
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.value = data.readFloatBE(0)
+        } else {
+            this.value = 0
+        }
     }
 
     toString() {
         return this.value.toString()
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
+
 export class INET implements type {
     address : Buffer = Buffer.from("")
 
-    constructor(data: Buffer) {
-        this.address = data
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.address = data
+        }
     }
 
     toString() {
@@ -128,32 +181,44 @@ export class INET implements type {
             return "invalid address"
         }
     }
+     
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class INT implements type {
     value : number = 0
 
-    constructor(data: Buffer) {
-        this.value = data.readInt32BE(0)
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.value = data.readInt32BE(0)
+        }
     }
 
     toString() {
         return this.value.toString()
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
 export class LIST implements type {
     list : Array<type | null> = new Array<type | null>()
 
-    constructor(data: Buffer, value : any) {
-        const n = data.readInt32BE(0)
-        data = data.slice(4)
-        this.list = Array.from({length: n})
-        for (let i = 0; i < n; ++i) {
-            let bytes = bufferToBytes(data);
-            if (bytes != null) {
-                this.list[i] = getTypeFrom(value, bytes.bytes);
-                data = data.slice(bytes.bytes.length + 4)
+    constructor(data: Buffer | string, value: any) {
+        if (data instanceof Buffer) {
+            const n = data.readInt32BE(0)
+            data = data.slice(4)
+            this.list = Array.from({length: n})
+            for (let i = 0; i < n; ++i) {
+                let bytes = bufferToBytes(data);
+                if (bytes != null) {
+                    this.list[i] = getTypeFrom(value, bytes.bytes);
+                    data = data.slice(bytes.bytes.length + 4)
+                }
             }
         }
     }
@@ -161,30 +226,36 @@ export class LIST implements type {
     toString() {
         return this.list.toString()
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class MAP implements type {
     container : Array<[type | null, type | null]> = new Array<[type | null, type | null]>()
 
-    constructor(data: Buffer, value : any) {
-        const [firstVal, secondVal] = value
-        const n = data.readInt32BE(0)
-        let dataPart = data.slice(4)
-        this.container = Array.from({length: n})
-        for (let i = 0; i < n; ++i) {
-            this.container[i] = [null, dataPart]
-            let bytes = bufferToBytes(dataPart);
-        
-            if (bytes != null) {
-                this.container[i][0] = getTypeFrom(firstVal, bytes.bytes);
-                dataPart = dataPart.slice(bytes.bytes.length + 4)
- 
-            }
+    constructor(data: Buffer | string, value : any) {
+        if (data instanceof Buffer) {
+            const [firstVal, secondVal] = value
+            const n = data.readInt32BE(0)
+            let dataPart = data.slice(4)
+            this.container = Array.from({length: n})
+            for (let i = 0; i < n; ++i) {
+                this.container[i] = [null, null]
+                let bytes = bufferToBytes(dataPart);
             
-            bytes = bufferToBytes(dataPart);
-            if (bytes != null) {
-                this.container[i][1] = getTypeFrom(secondVal, bytes.bytes);
-                dataPart = dataPart.slice(bytes.bytes.length + 4)
+                if (bytes != null) {
+                    this.container[i][0] = getTypeFrom(firstVal, bytes.bytes);
+                    dataPart = dataPart.slice(bytes.bytes.length + 4)
+    
+                }
+                
+                bytes = bufferToBytes(dataPart);
+                if (bytes != null) {
+                    this.container[i][1] = getTypeFrom(secondVal, bytes.bytes);
+                    dataPart = dataPart.slice(bytes.bytes.length + 4)
+                }
             }
         }
     }
@@ -201,20 +272,26 @@ export class MAP implements type {
         resultString = resultString.replace(/..$/,"}")
         return resultString
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class SET implements type {
     list : Array<type | null> = new Array<type | null>()
 
-    constructor(data: Buffer, value : any) {
-        const n = data.readInt32BE(0)
-        data = data.slice(4)
-        this.list = Array.from({length: n})
-        for (let i = 0; i < n; ++i) {
-            let bytes = bufferToBytes(data);
-            if (bytes != null) {
-                this.list[i] = getTypeFrom(value, bytes.bytes);
-                data = data.slice(bytes.bytes.length + 4)
+    constructor(data: Buffer | string, value : any) {
+        if (data instanceof Buffer) {
+            const n = data.readInt32BE(0)
+            data = data.slice(4)
+            this.list = Array.from({length: n})
+            for (let i = 0; i < n; ++i) {
+                let bytes = bufferToBytes(data);
+                if (bytes != null) {
+                    this.list[i] = getTypeFrom(value, bytes.bytes);
+                    data = data.slice(bytes.bytes.length + 4)
+                }
             }
         }
         //console.log(this.list.toString())
@@ -223,17 +300,27 @@ export class SET implements type {
     toString() {
         return this.list.toString()
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class SMALLINT implements type {
     value : number = 0
 
-    constructor(data: Buffer) {
-        this.value = data.readInt16BE()
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.value = data.readInt16BE()
+        }
     }
 
     toString() {
         return ""
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
@@ -247,17 +334,19 @@ export class TIME implements type {
     #secondsRatio : bigint = 1000000000n
 
 
-    constructor(data: Buffer) {
-        this.#nanoseconds = BigInt(data.slice(0, 4).readInt32BE(0)) * BigInt(Math.pow(2,32)) + BigInt(data.slice(4, 8).readInt32BE(0))
-        if (0 < this.#nanoseconds && this.#nanoseconds < 86399999999999) {
-            this.#hours = this.#nanoseconds / this.#hoursRatio
-            this.#nanoseconds -= this.#hours * this.#hoursRatio
-            console.log(this.#nanoseconds)
-            this.#minutes = this.#nanoseconds / this.#minutesRatio
-            this.#nanoseconds -= this.#minutes * this.#minutesRatio
-            console.log(this.#nanoseconds)
-            this.#seconds = this.#nanoseconds / this.#secondsRatio
-            this.#nanoseconds -= this.#seconds * this.#secondsRatio
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.#nanoseconds = BigInt(data.slice(0, 4).readInt32BE(0)) * BigInt(Math.pow(2,32)) + BigInt(data.slice(4, 8).readInt32BE(0))
+            if (0 < this.#nanoseconds && this.#nanoseconds < 86399999999999) {
+                this.#hours = this.#nanoseconds / this.#hoursRatio
+                this.#nanoseconds -= this.#hours * this.#hoursRatio
+                console.log(this.#nanoseconds)
+                this.#minutes = this.#nanoseconds / this.#minutesRatio
+                this.#nanoseconds -= this.#minutes * this.#minutesRatio
+                console.log(this.#nanoseconds)
+                this.#seconds = this.#nanoseconds / this.#secondsRatio
+                this.#nanoseconds -= this.#seconds * this.#secondsRatio
+            }
         }
     }
 
@@ -268,6 +357,10 @@ export class TIME implements type {
         }
         return result
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class DATE implements type {
@@ -275,9 +368,11 @@ export class DATE implements type {
     #value : Date = new Date(0)
     #days = 0
 
-    constructor(data: Buffer) {
-        this.#days = data.slice(0, 4).readUInt32BE(0) - Math.pow(2, 31)
-        this.#value = new Date(this.#days * 8.64e7)
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.#days = data.slice(0, 4).readUInt32BE(0) - Math.pow(2, 31)
+            this.#value = new Date(this.#days * 8.64e7)
+        }
     }
 
     toString() {
@@ -287,15 +382,21 @@ export class DATE implements type {
       
         return this.#value.getUTCFullYear() + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate() 
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class TIMESTAMP implements type {
     #value : Date = new Date(0)
     #miliseconds = 0
 
-    constructor(data: Buffer) {
-        this.#miliseconds = data.slice(0, 4).readUInt32BE(0) * Math.pow(2, 32) + data.slice(4, 8).readUInt32BE(0)
-        this.#value = new Date(this.#miliseconds)
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.#miliseconds = data.slice(0, 4).readUInt32BE(0) * Math.pow(2, 32) + data.slice(4, 8).readUInt32BE(0)
+            this.#value = new Date(this.#miliseconds)
+        }
     }
 
     toString() {
@@ -319,32 +420,44 @@ export class TIMESTAMP implements type {
 
         return result
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class TINYINT implements type {
     value : number = 0
 
-    constructor(data: Buffer) {
-        this.value = data.readInt8()
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.value = data.readInt8()
+        }
     }
 
     toString() {
         return this.value.toString()
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
 export class TUPLE implements type {
     tuple : Array<type | null> = new Array<type | null>()
 
-    constructor(data: Buffer, value : any) {
-        const n = value.length
-        this.tuple = Array.from({length: n})
-        for (let i = 0; i < n; ++i) {
-            let bytes = bufferToBytes(data);
-            if (bytes != null) {
-                //console.log(value[i])
-                this.tuple[i] = getTypeFrom(value[i], bytes.bytes);
-                data = data.slice(bytes.bytes.length + 4)
+    constructor(data: Buffer | string, value: any) {
+        if (data instanceof Buffer) {
+            const n = value.length
+            this.tuple = Array.from({length: n})
+            for (let i = 0; i < n; ++i) {
+                let bytes = bufferToBytes(data);
+                if (bytes != null) {
+                    //console.log(value[i])
+                    this.tuple[i] = getTypeFrom(value[i], bytes.bytes);
+                    data = data.slice(bytes.bytes.length + 4)
+                }
             }
         }
     }
@@ -360,34 +473,58 @@ export class TUPLE implements type {
         resultString = resultString.replace(/..$/,")")
         return resultString
     }
+
+    toCQL() {
+        return Buffer.from("")
+    }
 }
 
 export class UUID implements type {
     #value : string = ""
 
-    constructor(data: Buffer) {
-        this.#value = stringify(data)
+    constructor(data: Buffer | string) {
+        console.log(data)
+        if (data instanceof Buffer) {
+            this.#value = stringify(data)
+        } else {
+            this.#value = data
+        }
     }
 
     toString() {
         return this.#value
+    }
+
+    toCQL() {
+       
+        return Buffer.from(Array.from(parse(this.#value)))
     }
 }
 
 export class VARCHAR implements type {
     #value : string = ""
 
-    constructor(data: Buffer) {
-        this.#value = data.toString('utf8')
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.#value = data.toString('utf8')
+        }
     }
 
     toString() {
         return this.#value
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
 
 export class VARINT implements type {
     toString() {
         return ""
+    }
+
+    toCQL() {
+        return Buffer.from("")
     }
 }
