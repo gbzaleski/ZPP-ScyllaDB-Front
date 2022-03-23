@@ -100,29 +100,6 @@ const Terminal = () => {
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1)
                     }
-                    else if (command.toLowerCase().trim() == "mock") // Mock data
-                    {
-
-                        // TODO Temporary mock table with data
-                        const mock_table = [
-                            ["id", "Imię" , "Urodzony",	"Zmarł", "Początek panowania", "Koniec panowania"],
-                            ["0", "Bolesław I Chrobry", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025"],
-                            ["1", "Jan Matejko", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296"],
-                            ["2", "August III Sus", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763"],
-                            ["3", "August II Mocny", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733"],
-                            ["4", "Bolesław Drugi", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025"],
-                            ["5", "Jan Drugi", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296"],
-                            ["6", "August 2.0", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763"],
-                            ["7", "August 3.0", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733"],
-                        ]
-                        console.log("Using mock table", mock_table)
-
-                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        clearInput();
-                        setPositionInHistory(commandHistory.length + 1)
-                        setServerResponse("")
-                        setTableResponse(mock_table)
-                    }
                     else if (command.toLowerCase().trim() == "clear")
                     {
                         clearInput();
