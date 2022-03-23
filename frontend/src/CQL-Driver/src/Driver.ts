@@ -6,8 +6,22 @@ import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
 import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
+/*
+interface Driver {
+    connect(websocket : any, setResponse : any, setTableResponse) : void
+    sendQuery() : void
+    prepare(body : string) : void
+    execute(body : string, bindValues : Array<string>) : Buffer | null
+    setKeyspace() : void
+    setConsistency(body : string) : void
+    getConsistencyName() : string
+    setPaging(mode : string, size? : number) : void
+    getNextPage() : void
+    getPreviousPage() : void
+}*/
 
 class CQLDriver {
+    #shouldSaveData : boolean
     #consistency: Consistency
     #keyspace : string
     #pageSize: number
@@ -20,21 +34,76 @@ class CQLDriver {
     #expectingNewQuery : boolean
     #bindValues : Array<string>
     #preparedStatements : Map<bigint, Array<Option>>
-
+    #driverState : Map<string, any>
+    
     constructor() {
-        this.#consistency = getConsistency("ONE");
-        this.#keyspace = ""
-        this.#pageSize = 6
-        this.#pagingEnabled = true
-        this.#pagingStates = []
-        this.#pagingIndex = -1
-        this.#expectedIndex = 0
-        this.#lastQuery = ""
-        this.#lastQueryType = "QUERY"
-        this.#expectingNewQuery = true
-        this.#bindValues = []
-        this.#preparedStatements = new Map()
+        console.log("constructing object")
+        let isSaving = window.sessionStorage.getItem('driverState');
+        let driverState = window.sessionStorage.getItem("driverState")
+        if (isSaving == null || driverState == null || JSON.parse(isSaving) == false) {
+            this.#driverState = new Map()
+            this.#shouldSaveData = false
+            this.#consistency = getConsistency("ONE");
+            this.#driverState.set("consistency", this.#consistency)
+            this.#keyspace = ""
+            this.#driverState.set("keyspace", this.#keyspace)
+            this.#pageSize = 6
+            this.#driverState.set("pageSize", this.#pageSize)
+            this.#pagingEnabled = true
+            this.#driverState.set("pagingEnabled", this.#pagingEnabled)
+            this.#pagingStates = []
+            this.#driverState.set("pagingStates", this.#pagingStates)
+            this.#pagingIndex = -1
+            this.#driverState.set("pagingIndex", this.#pagingIndex)
+            this.#expectedIndex = 0
+            this.#driverState.set("expectedIndex", this.#expectedIndex)
+            this.#lastQuery = ""
+            this.#driverState.set("lastQuery", this.#lastQuery)
+            this.#lastQueryType = "QUERY"
+            this.#driverState.set("lastQueryType", this.#lastQueryType)
+            this.#expectingNewQuery = true
+            this.#driverState.set("expectingNewQuery", this.#expectingNewQuery)
+            this.#bindValues = []
+            this.#driverState.set("bindValues", this.#bindValues)
+            this.#preparedStatements = new Map()
+            this.#driverState.set("preparedStatements", this.#preparedStatements)
+
+
+            if (isSaving == null) {
+                this.#shouldSaveData = true
+                this.enableSaving()
+            }
+        } else {
+            console.log("something up there")
+            this.#shouldSaveData = true
+            this.#driverState = new Map(JSON.parse(driverState))
+            this.#consistency = this.#driverState.get('consistency')
+            this.#keyspace = this.#driverState.get('keyspace')
+            console.log(this.#keyspace)
+            this.#pageSize = this.#driverState.get('pageSize')
+            this.#pagingEnabled = this.#driverState.get('pagingEnabled')
+            this.#pagingStates = this.#driverState.get('pagingStates')
+            this.#pagingIndex = this.#driverState.get('pagingIndex')
+            this.#expectedIndex = this.#driverState.get('expectedIndex')
+            this.#lastQuery = this.#driverState.get('lastQuery')
+            this.#lastQueryType = this.#driverState.get('lastQueryType')
+            this.#expectingNewQuery = this.#driverState.get('expectingNewQuery')
+            this.#bindValues = this.#driverState.get('bindValues')
+            this.#preparedStatements = this.#driverState.get('preparedStatements')
+        }
     }
+
+    enableSaving = () : void => {
+        window.sessionStorage.setItem('isSaving', JSON.stringify(true))
+        //console.log(new Map(JSON.parse(JSON.stringify([...this.#driverState.entries()]))))
+        window.sessionStorage.setItem('driverState', JSON.stringify([...this.#driverState.entries()]))
+    }
+
+    disableSaving = () : void => {
+        window.sessionStorage.setItem('isSaving', JSON.stringify(false))
+        window.sessionStorage.removeItem('driverState')
+    }
+
 
     handshake = handshakeMessage.bind(this)
 
@@ -170,6 +239,8 @@ class CQLDriver {
 
     #setKeyspace = (keyspace : string) => {
         this.#keyspace = keyspace
+        this.#driverState.set('keyspace', keyspace)
+        window.sessionStorage.setItem('driverState', JSON.stringify([...this.#driverState.entries()]))
     }
 
     #setLastQuery = (query : string) : void => {
