@@ -38,8 +38,12 @@ class CQLDriver {
 
     handshake = handshakeMessage.bind(this)
 
+    #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
+        this.#preparedStatements.set(id, values)
+    }
+
     getResponse = (buf: Buffer) => {
-        return getQueryResult(this, buf, this.#setKeyspace)
+        return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
     }
 
     connect = (websocket : any, setResponse : any, setTableResponse : any) : boolean => {
@@ -77,11 +81,6 @@ class CQLDriver {
         this.#lastQueryType = "QUERY"
         this.#bindValues = []
         return getQueryMessage(this, body, this.#setLastQuery, pagingState);
-    }
-
-
-    #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
-        this.#preparedStatements.set(id, values)
     }
 
     prepare = (body : string) : Buffer => {
