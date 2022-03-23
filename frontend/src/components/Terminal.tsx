@@ -5,7 +5,6 @@ import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
 import ServerResponse from "./ServerResponse";
 import {CQLDriver} from "../CQL-Driver/src/Driver";
-import {DEFAULT_PAGING_VALUE} from "../consts"
 
 const Terminal = () => {
     const [command, setCommand] = useState("");
@@ -15,7 +14,6 @@ const Terminal = () => {
     const [serverResponse, setServerResponse] = useState<string>("");
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
-    const [pagingValue, setPagingValue] = useState<Number>(0); // 0 = OFF , Positive value > ON, assuming 40 or smth as default value for paging on
 
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -141,21 +139,26 @@ const Terminal = () => {
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PAGING") {
                         // Rest of arguments are ignored - we can change it for required precise 2 arguemnts
+                        const newPagingMode = tokenizedCommand[1].trim();
 
-                        console.log("Setting paging from: ", pagingValue, tokenizedCommand)
-
-                        const newPagingValue = tokenizedCommand[1].trim();
-                        if (newPagingValue === "OFF")
-                        {
-                            setPagingValue(0)
+                        let newPagingValue
+                        if (tokenizedCommand.length > 2) {
+                            newPagingValue = tokenizedCommand[2].trim();
+                        } else {
+                            newPagingValue = "";
                         }
-                        else if (newPagingValue === "ON" && pagingValue === 0)
+                        
+                        if (newPagingMode === "OFF")
                         {
-                            setPagingValue(DEFAULT_PAGING_VALUE)
+                            driver.setPaging("OFF")
                         }
-                        else if (pagingValue > 0 && parseInt(newPagingValue) > 0)
+                        else if (newPagingMode === "ON" && newPagingValue === "")
                         {
-                            setPagingValue(parseInt(newPagingValue))
+                            driver.setPaging("ON")
+                        }
+                        else if (newPagingMode === "ON" && parseInt(newPagingValue) > 0)
+                        {
+                            driver.setPaging("ON", parseInt(newPagingValue))
                         }
 
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
