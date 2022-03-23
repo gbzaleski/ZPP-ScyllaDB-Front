@@ -2,6 +2,7 @@ import { Buffer } from 'buffer';
 import {Byte, Int, Long, Short, String, StringList, Option, Bytes, ShortBytes} from "./types";
 const format = require("biguint-format");
 import {parse} from 'uuid'
+import { getTypeFrom } from '../cql-types/typeFactory';
 
 export const numberToLong = (value: bigint) : Long => {
     return {long: bigIntToBuffer(value, 8)}
@@ -86,7 +87,8 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
 
 export const bufferToString = (buf : Buffer) : String => {
     const len = Number(format(buf.slice(0, 2)))
-  
+    console.log(len)
+    console.log(buf.slice(2, len + 2))
     return {length: numberToShort(BigInt(len)), string: buf.slice(2, len + 2)}
 }
 
@@ -175,20 +177,34 @@ export const bufferToStringList = (buf : Buffer) : StringList => {
     return  {length: numberToShort(len), stringList: result}
 }
 
-const stringToValue = (textValue : string) : Buffer => {
+const stringToValue = (option : Option, textValue : string) : Buffer => {
     if (textValue == "null") {
         return Buffer.from([-1])
     }
+
+    const type = getTypeFrom(option, textValue)
+
+    // TODO : handle null
+
+    let typeVal : Buffer
+    if (type == null) {
+        typeVal = Buffer.from("null")
+    }
+    else {
+        typeVal = type.toCQL()
+        console.log(typeVal)
+    }
+
     //const val : ArrayLike<number> = parse(textValue)
-    const result = Buffer.concat([numberToInt(BigInt(textValue.length)).int, Buffer.from(textValue)])
+    const result = Buffer.concat([numberToInt(BigInt(typeVal.length)).int, typeVal])
     return result
 }
 
-export const tokensToValues = (values : Array<string>) : Buffer => {
+export const tokensToValues = (types : Array<Option>, values : Array<string>) : Buffer => {
     let results = numberToShort(BigInt(values.length)).short
 
     for (let i = 0; i < values.length; ++i) {
-        results = Buffer.concat([results, stringToValue(values[i])])
+        results = Buffer.concat([results, stringToValue(types[i], values[i])])
     }
 
     return results

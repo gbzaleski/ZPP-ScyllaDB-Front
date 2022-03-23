@@ -18,34 +18,6 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
     useEffect(() => {
         // Create WebSocket connection.
         websocket.current = new WebSocket('ws://localhost:8222');
-        console.log(websocket.current)
-
-        // Connection opened
-        websocket.current.addEventListener('open', function (event : any) {
-            console.log('Connected to the WS Server!')
-        });
-
-        // Connection closed
-        websocket.current.addEventListener('close', function (event: any) {
-            console.log('Disconnected from the WS Server!')
-        });
-
-        // Listen for messages
-        websocket.current.addEventListener('message', function (event: any) {
-            event.data.arrayBuffer().then((response: any) => {
-                response = driver.getResponse(Buffer.from(response))
-                if (typeof response == "string") {
-                    setResponse(response)
-                } else {
-                    setTableResponse(response)
-                }
-            })
-
-            // TODO: Parsing response for table or just string and then executing respective setState.
-
-           // console.log('Message from server ', Buffer.from(event.data.arrayBuffer()));
-           //console.log('Message from server ', event.data.json());
-        });
     }, []);
 
     return (

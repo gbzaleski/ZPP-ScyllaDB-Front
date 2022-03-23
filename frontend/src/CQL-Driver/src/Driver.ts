@@ -1,5 +1,5 @@
 import handshakeMessage from "./functions/Handshake"
-import {Bytes, Consistency} from "./utils/types";
+import {Bytes, Consistency, Option} from "./utils/types";
 import getConsistency from "./functions/Consistency";
 import {numberToShort} from "./utils/conversions";
 import getQueryMessage from "./utils/getQueryMessage";
@@ -19,6 +19,7 @@ class CQLDriver {
     #expectedIndex : number
     #expectingNewQuery : boolean
     #bindValues : Array<string>
+    #preparedStatements : Map<bigint, Array<Option>>
 
     constructor() {
         this.#consistency = getConsistency("ONE");
@@ -32,9 +33,43 @@ class CQLDriver {
         this.#lastQueryType = "QUERY"
         this.#expectingNewQuery = true
         this.#bindValues = []
+        this.#preparedStatements = new Map()
     }
 
     handshake = handshakeMessage.bind(this)
+
+    getResponse = (buf: Buffer) => {
+        return getQueryResult(this, buf, this.#setKeyspace)
+    }
+
+    connect = (websocket : any, setResponse : any, setTableResponse : any) : boolean => {
+        let driver = this
+        websocket.current.addEventListener('open', function (event : any) {
+            console.log('Connected to the WS Server!')
+        });
+        const coder = new TextEncoder()
+        websocket.current.send(coder.encode(driver.handshake()));
+
+         // Connection closed
+         websocket.current.addEventListener('close', function (event: any) {
+            console.log('Disconnected from the WS Server!')
+        });
+
+        // Listen for messages
+        
+        websocket.current.addEventListener('message', function (event: any) {
+            event.data.arrayBuffer().then((response: any) => {
+                response = driver.getResponse(Buffer.from(response))
+                if (typeof response == "string") {
+                    setResponse(response)
+                } else {
+                    setTableResponse(response)
+                }
+            })
+        });
+
+        return true;
+    }
 
     query = (body : string, pagingState? : Bytes) : Buffer => {
         this.#expectedIndex = 0
@@ -44,16 +79,28 @@ class CQLDriver {
         return getQueryMessage(this, body, this.#setLastQuery, pagingState);
     }
 
+
+    #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
+        this.#preparedStatements.set(id, values)
+    }
+
     prepare = (body : string) : Buffer => {
         return getPrepareMessage(body)
     }
 
-    execute = (body : string, bindValues : Array<string>) : Buffer => {
+    execute = (body : string, bindValues : Array<string>) : Buffer | null => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "EXECUTE"
         this.#bindValues = bindValues
-        return getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues);
+        console.log(BigInt(body))
+        const result = this.#preparedStatements.get(BigInt(body))
+
+        if (result == undefined) {
+            return null
+        }
+        console.log(result)
+        return getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues, result);
     }
 
     getNextPageQuery = () : Buffer | null => {
@@ -77,7 +124,12 @@ class CQLDriver {
 
         if (isFirstPage && pagingState == null) {
             if (this.#lastQueryType == "EXECUTE") {
-                return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, this.#bindValues);
+                const result = this.#preparedStatements.get(BigInt(this.#lastQuery))
+
+                if (result == undefined) {
+                    return null
+                }
+                return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, this.#bindValues, result);
             } else {
                 return getQueryMessage(this, this.#lastQuery, this.#setLastQuery);
             }
@@ -85,7 +137,12 @@ class CQLDriver {
             return null
         }
         if (this.#lastQueryType == "EXECUTE") {
-            return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, this.#bindValues, pagingState);
+            const result = this.#preparedStatements.get(BigInt(this.#lastQuery))
+
+            if (result == undefined) {
+                return null
+            }
+            return getExecuteMessage(this, this.#lastQuery, this.#setLastQuery, this.#bindValues, result, pagingState);
         } else {
             return getQueryMessage(this, this.#lastQuery, this.#setLastQuery, pagingState);
         }
@@ -173,10 +230,6 @@ class CQLDriver {
 
     getPaging = () : [number, boolean] => {
         return [this.#pageSize, this.#pagingEnabled]
-    }
-
-    getResponse = (buf: Buffer) => {
-        return getQueryResult(this, buf, this.#setKeyspace)
     }
 }
 
