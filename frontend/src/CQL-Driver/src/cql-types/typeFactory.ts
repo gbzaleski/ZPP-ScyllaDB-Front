@@ -2,10 +2,9 @@ import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT,
         SET, INT, type, LIST, MAP, VARCHAR, UUID, TUPLE, INET, TIME, DATE, SMALLINT, TINYINT, TIMESTAMP} from "./types";
 const format = require("biguint-format");
 
-export const getTypeFrom = (type: any, data: Buffer) : type | null =>  {
+export const getTypeFrom = (type: any, data: Buffer | string) : type | null =>  {
     const id = Number(format(type.id.short))
     const value = type.value
-
     switch (id) {
         case 1: {
             return new ASCII(data);
