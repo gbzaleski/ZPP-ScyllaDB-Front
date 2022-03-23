@@ -36,6 +36,39 @@ class CQLDriver {
 
     handshake = handshakeMessage.bind(this)
 
+    getResponse = (buf: Buffer) => {
+        return getQueryResult(this, buf, this.#setKeyspace)
+    }
+
+    connect = (websocket : any, setResponse : any, setTableResponse : any) : boolean => {
+        let driver = this
+        websocket.current.addEventListener('open', function (event : any) {
+            console.log('Connected to the WS Server!')
+        });
+        const coder = new TextEncoder()
+        websocket.current.send(coder.encode(driver.handshake()));
+
+         // Connection closed
+         websocket.current.addEventListener('close', function (event: any) {
+            console.log('Disconnected from the WS Server!')
+        });
+
+        // Listen for messages
+        
+        websocket.current.addEventListener('message', function (event: any) {
+            event.data.arrayBuffer().then((response: any) => {
+                response = driver.getResponse(Buffer.from(response))
+                if (typeof response == "string") {
+                    setResponse(response)
+                } else {
+                    setTableResponse(response)
+                }
+            })
+        });
+
+        return true;
+    }
+
     query = (body : string, pagingState? : Bytes) : Buffer => {
         this.#expectedIndex = 0
         this.clearPagingStates()
@@ -175,9 +208,7 @@ class CQLDriver {
         return [this.#pageSize, this.#pagingEnabled]
     }
 
-    getResponse = (buf: Buffer) => {
-        return getQueryResult(this, buf, this.#setKeyspace)
-    }
+   
 }
 
 export {CQLDriver}

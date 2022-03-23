@@ -46,9 +46,8 @@ const Terminal = () => {
         webSocket.current.send(msg);
     }
 
-    const sendHandshake = () => {
-        const coder = new TextEncoder()
-        webSocket.current.send(coder.encode(driver.handshake()));
+    const sendConnect = (driver : CQLDriver) => {
+        driver.connect(webSocket, setServerResponse, setTableResponse);
     }
 
     // Retrieving previously used commands from the localStorage
@@ -132,9 +131,9 @@ const Terminal = () => {
                         setCommandHistory([]);
                         setCommandResult("");
                         setTableResponse([]);
-                    } else if (command.toLowerCase().trim() == "handshake") {
+                    } else if (command.toLowerCase().trim() == "connect") {
                         setServerResponse("")
-                        sendHandshake();
+                        sendConnect(driver);
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setTableResponse([]);
