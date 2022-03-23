@@ -30,7 +30,7 @@ export class ASCII implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        return Buffer.from(this.asciiText, "ascii")
     }
 }
 
@@ -88,7 +88,7 @@ export class BOOLEAN implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        return Buffer.from([this.value ? 1 : 0])
     }
 }
 
@@ -140,7 +140,9 @@ export class DOUBLE implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeDoubleBE(this.value, 0)
+        return buf
     }
 }
 
@@ -159,7 +161,9 @@ export class FLOAT implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeFloatBE(this.value, 0)
+        return buf
     }
 }
 
@@ -201,7 +205,9 @@ export class INT implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeInt32BE(this.value, 0)
+        return buf
     }
 }
 
@@ -316,11 +322,13 @@ export class SMALLINT implements type {
     }
 
     toString() {
-        return ""
+        return this.value.toString()
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeInt16BE(this.value, 0)
+        return buf
     }
 }
 
@@ -440,7 +448,9 @@ export class TINYINT implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeInt8(this.value, 0)
+        return buf
     }
 }
 
@@ -496,7 +506,6 @@ export class UUID implements type {
     }
 
     toCQL() {
-       
         return Buffer.from(Array.from(parse(this.#value)))
     }
 }
@@ -515,7 +524,7 @@ export class VARCHAR implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        return Buffer.from(this.#value, "utf-8")
     }
 }
 

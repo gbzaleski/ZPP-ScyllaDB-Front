@@ -168,7 +168,10 @@ const Terminal = () => {
                        
 
                         // Tu jakis odbiór
-                        sendMsg(driver.execute(executeArgs[0], executeArgs.slice(1)))
+                        const executeQuery = driver.execute(executeArgs[0], executeArgs.slice(1))
+                        if (executeQuery != null) {
+                            sendMsg(executeQuery)
+                        }
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setServerResponse("")
