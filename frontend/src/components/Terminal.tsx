@@ -106,15 +106,15 @@ const Terminal = () => {
 
                         // TODO Temporary mock table with data
                         const mock_table = [
-                            ["id", "Imię" , "Urodzony",	"Zmarł", "Początek panowania", "Koniec panowania"],
-                            ["0", "Bolesław I Chrobry", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025"],
-                            ["1", "Jan Matejko", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296"],
-                            ["2", "August III Sus", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763"],
-                            ["3", "August II Mocny", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733"],
-                            ["4", "Bolesław Drugi", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025"],
-                            ["5", "Jan Drugi", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296"],
-                            ["6", "August 2.0", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763"],
-                            ["7", "August 3.0", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733"],
+                            ["id", "Imię" , "Urodzony",	"Zmarł", "Początek panowania", "Koniec panowania", "id", "Imię" , "Urodzony",	"Zmarł", "Początek panowania", "Koniec panowania", "id", "Imię" , "Urodzony",	"Zmarł", "Początek panowania", "Koniec panowania", "id", "Imię" , "Urodzony",	"Zmarł", "Początek panowania", "Koniec panowania"],
+                            ["0", "Bolesław I Chrobry", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025", "0", "Bolesław I Chrobry", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025", "0", "Bolesław I Chrobry", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025", "0", "Bolesław I Chrobry", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025"],
+                            ["1", "Jan Matejko", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296", "1", "Jan Matejko", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296", "1", "Jan Matejko", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296", "1", "Jan Matejko", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296"],
+                            ["2", "August III Sus", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763", "2", "August III Sus", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763", "2", "August III Sus", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763", "2", "August III Sus", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763"],
+                            ["3", "August II Mocny", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733", "3", "August II Mocny", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733", "3", "August II Mocny", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733", "3", "August II Mocny", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733"],
+                            ["4", "Bolesław Drugi", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025", "4", "Bolesław Drugi", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025", "4", "Bolesław Drugi", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025", "4", "Bolesław Drugi", "967", "17 czerwca 1025", "18 kwietnia 1025", "17 czerwca 1025"],
+                            ["5", "Jan Drugi", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296", "5", "Jan Drugi", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296", "5", "Jan Drugi", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296", "5", "Jan Drugi", "14 października 1257", "8 lutego 1296", "26 czerwca 1295",	"8 lutego 1296"],
+                            ["6", "August 2.0", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763", "6", "August 2.0", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763", "6", "August 2.0", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763", "6", "August 2.0", "17 października 1696", "5 października 1763", "5 października 1733", "5 października 1763"],
+                            ["7", "August 3.0", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733", "7", "August 3.0", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733", "7", "August 3.0", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733", "7", "August 3.0", "2 maja 1670", "1 lutego 1733", "15 września 1697", "1 lutego 1733"],
                         ]
                         console.log("Using mock table", mock_table)
 
@@ -278,7 +278,7 @@ const Terminal = () => {
 
 const useStyles = makeStyles(theme => ({
     terminalContainer: {
-        height: "100vh",
+        height: "100%",
         width: "100%",
         backgroundColor: "black",
         color: "lightblue",
