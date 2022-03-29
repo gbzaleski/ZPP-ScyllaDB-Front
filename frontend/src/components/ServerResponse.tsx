@@ -5,8 +5,8 @@ import TableDisplayer from "./TableDisplayer";
 interface ServerResponseProps {
     driver: any;
     websocket: any;
-    response: string;
-    setResponse: (s: string) => void;
+    response: [string, string];
+    setResponse: (s: [string, string]) => void;
     tableResponse: string[][];
     setTableResponse: (s: string[][]) => void;
     sendMsg: (s : Buffer) => void; 
@@ -41,7 +41,7 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
                         {'>'}
                     </div>
                     <div className={classes.inputContainer}>
-                        {response.toLocaleLowerCase().includes("error") ? errorResponse : response}
+                        {response[0].toLocaleLowerCase().includes("error") ? errorResponse : response}
                     </div>
                 </div>)}
             <hr/>

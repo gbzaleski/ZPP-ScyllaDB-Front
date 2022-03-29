@@ -13,13 +13,14 @@ import getLength from "./getLength";
 import { getOpcodeName } from "./getOpcode";
 import { getTypeFrom } from "../cql-types/typeFactory";
 import { CQLDriver } from "../Driver";
+import extractErrorMessage from "./extractErrorMessage";
 const format = require("biguint-format");
 
-const getVoidResult = () : string => {
-    return ""
+const getVoidResult = () : [string, string] => {
+    return ["", ""]
 }
 
-const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array<string>> => {
+const getRowsResult = (driver : CQLDriver, buf : Buffer) : [string  | Array<Array<string>>, ""] => {
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -127,17 +128,17 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : string  | Array<Array
         }
     }
 
-    return content
+    return [content, ""]
 }
 
-const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void) : string => {
+const getSetKeyspaceResult = (buf : Buffer, setKeyspace : (arg0: string) => void) : [string, string] => {
     const keyspaceName =  bufferToString(buf).string.toString()
     setKeyspace(keyspaceName)
     const response = "Changed keyspace to " + keyspaceName
-    return response
+    return [response, ""]
 }
 
-const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : string => {
+const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : [string, string] => {
     const idBuffer = bufferToShortBytes(buf).shortBytes
     const id = BigInt(format(bufferToShortBytes(buf).shortBytes))
     let globalTableSpecPresent = false
@@ -192,10 +193,10 @@ const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : string =>
     console.log(columnValues)
     addPreparedStatement(id, columnValues)
 
-    return "Prepared statement with id " + id.toString()
+    return ["Prepared statement with id " + id.toString(), ""]
 }
 
-const getSchemaChangeResult = (buf : Buffer) : string => {
+const getSchemaChangeResult = (buf : Buffer) : [string, string] => {
     let stringLen = 0
     const changeType = bufferToString(buf).string.toString()
     stringLen += changeType.length + 2
@@ -222,10 +223,10 @@ const getSchemaChangeResult = (buf : Buffer) : string => {
         }
     }
 
-    return changeType + " " + target + " " + option
+    return [changeType + " " + target + " " + option, ""]
 }
 
-const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPreparedStatement : any) : string | Array<Array<string>> => {
+const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPreparedStatement : any) : [string | Array<Array<string>>, string] => {
 
     //console.log(buffer)
     const length = getLength(buffer)
@@ -253,9 +254,11 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPrepa
             }
         }
 
-        return "Invalid body code" + body.toString()
+        return ["Invalid optcode:", code.toString()]
+    } else if (getOpcodeName(buffer) == "ERROR") {
+        return extractErrorMessage(body);
     } else {
-        return getOpcodeName(buffer) + body.toString();
+        return ["Unexpected response, cannot be handled.", ""];
     }
 }
 
