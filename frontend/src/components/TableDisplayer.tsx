@@ -30,14 +30,8 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
     const [back, setDisableOnBack] = React.useState(page == 1);
     const [next, setDisableOnNext] = React.useState(false);
     const setDisable = () => {
-        //FIXME: waiting for hasNext/PrevPage to be implemented
-        console.log("waiting for hasNext/PrevPage to be implemented");
-        // setDisableOnBack(page <= 2);
-
-        // const nextQ =  driver.getNextPageQuery();
-        // setDisableOnNext(nextQ == null);
-        // if (nextQ != null)
-        //     driver.getPreviousPageQuery();
+        setDisableOnNext(driver.hasNextPage())
+        setDisableOnBack(driver.hasPreviousPage())
     }
 
     const onBack = () => {
