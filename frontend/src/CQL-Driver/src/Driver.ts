@@ -22,6 +22,7 @@ class CQLDriver {
     #preparedStatements : Map<bigint, Array<Option>>
 
     constructor() {
+        console.log("creating object")
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
         this.#pageSize = 6
@@ -110,6 +111,20 @@ class CQLDriver {
 
     getNumberOfLoadedPages = () : number => {
         return this.#pagingStates.length + 1
+    }
+
+    hasPreviousPage = () : boolean => {
+        if (this.getPageNumber() > 0) {
+            return true
+        }
+        return false
+    }
+
+    hasNextPage = () : boolean => {
+        if (this.getPageNumber() < this.#pagingStates.length) {
+            return true
+        }
+        return false
     }
 
     getPreviousPageQuery = () : Buffer | null => {
