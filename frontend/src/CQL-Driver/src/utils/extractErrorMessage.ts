@@ -1,6 +1,4 @@
-import { getConstantValue } from "typescript";
-import getConsistency from "../functions/Consistency";
-import { bufferToInt, bufferToShort, bufferToShortBytes, bufferToString } from "./conversions";
+import { bufferToInt, bufferToShort, bufferToShortBytes, bufferToString, bufferToStringList } from "./conversions";
 import getConsistencyName from "./getConsistencyName";
 const format = require("biguint-format");
 
@@ -45,6 +43,119 @@ const getTruncateErrorMessage = (errorBody: Buffer): [string, string] => {
     return [bufferToString(errorBody).string.toString(), "Truncate Error"]
 }
 
+
+const getWriteTimeoutMessage = (errorBody: Buffer): [string, string] => {
+    let position = 0
+    const consistency = bufferToShort(errorBody.slice(position)).short
+    position += 2;
+    const received = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const blockFor = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const writeType = bufferToString(errorBody.slice(position)).string
+
+    const message =
+        "Consistency of query that triggered exception: " +
+        getConsistencyName(Number(format(consistency))) + ". " + 
+        "Nodes that acknowledged request: " +
+        format(received) + ", " + 
+        "Required replicas: " +
+        format(blockFor) + "."
+        "Type of write that timed out: " + writeType.toString()
+
+    return [message, "Write Timeout"]
+}
+
+const getReadTimeoutMessage = (errorBody: Buffer): [string, string] => {
+    let position = 0
+    const consistency = bufferToShort(errorBody.slice(position)).short
+    position += 2;
+    const received = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const blockFor = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const dataPresent = errorBody.slice(position)
+
+    const message =
+        "Consistency of query that triggered exception: " +
+        getConsistencyName(Number(format(consistency))) + ". " + 
+        "Nodes that answered request: " +
+        format(received) + ", " + 
+        "Required replicas: " +
+        format(blockFor) + "." + 
+        (dataPresent[0] == 0 ? "Asked replica has not responded." : "")
+
+    return [message, "Read Timeout"]
+}
+
+const getFunctionFailureMessage = (errorBody: Buffer): [string, string] => {
+    let position = 0
+    const keyspace = bufferToString(errorBody.slice(position)).string
+    position += keyspace.length + 2;
+    const fun = bufferToString(errorBody.slice(position)).string
+    position += fun.length + 2;
+    const argTypes = bufferToStringList(errorBody.slice(position)).stringList
+
+    const message =
+        "Function : " + fun.toString() +
+        " with arguments: " + argTypes.join(" ") +
+        " at keyspace: " + keyspace + " failed."
+
+    return [message, "Function Timeout"]
+}
+
+
+const getReadFailureMessage = (errorBody: Buffer): [string, string] => {
+    let position = 0
+    const consistency = bufferToShort(errorBody.slice(position)).short
+    position += 2;
+    const received = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const blockFor = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const numFailures = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const dataPresent = errorBody.slice(position)
+
+    const message =
+        "Consistency of query that triggered exception: " +
+        getConsistencyName(Number(format(consistency))) + ". " + 
+        "Nodes that answered request: " +
+        format(received) + ", " + 
+        "Required replicas: " +
+        format(blockFor) + "." + 
+        "Number of nodes that failed: " + format(numFailures) +
+        (dataPresent[0] == 0 ? "Asked replica has not responded." : "")
+
+    return [message, "Read Failure"]
+}
+
+
+const getWriteFailureMessage = (errorBody: Buffer): [string, string] => {
+    let position = 0
+    const consistency = bufferToShort(errorBody.slice(position)).short
+    position += 2;
+    const received = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const blockFor = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const numFailures = bufferToInt(errorBody.slice(position)).int
+    position += 4;
+    const writeType = bufferToString(errorBody.slice(position))
+
+    const message =
+        "Consistency of query that triggered exception: " +
+        getConsistencyName(Number(format(consistency))) + ". " + 
+        "Nodes that answered request: " +
+        format(received) + ", " + 
+        "Required replicas: " +
+        format(blockFor) + "." + 
+        "Number of nodes that failed: " + format(numFailures) +
+        "Type of write that timed out: " + writeType.toString()
+
+    return [message, "Write Failure"]
+}
+
 const getSyntaxErrorMessage = (errorBody: Buffer): [string, string] => {
     return [bufferToString(errorBody).string.toString(), "Syntax Error"]
 }
@@ -79,8 +190,6 @@ const getUnpreparedMessage = (errorBody: Buffer): [string, string] => {
     return [message, "Unprepared"]
 }
 
-
-
 const extractErrorMessage = (messageBody : Buffer) : [string, string] => {
     const errorCode = Number(format(bufferToInt(messageBody).int))
     console.log(errorCode)
@@ -110,6 +219,21 @@ const extractErrorMessage = (messageBody : Buffer) : [string, string] => {
         }
         case 0x1003: {
             return getTruncateErrorMessage(messageBody);
+        }
+        case 0x1100: {
+            return getWriteTimeoutMessage(messageBody);
+        }
+        case 0x1200: {
+            return getReadTimeoutMessage(messageBody);
+        }
+        case 0x1300: {
+            return getReadFailureMessage(messageBody);
+        }
+        case 0x1400: {
+            return getFunctionFailureMessage(messageBody)
+        }
+        case 0x1500: {
+            return getWriteFailureMessage(messageBody);
         }
         case 0x2000: {
             return getSyntaxErrorMessage(messageBody);

@@ -1,5 +1,3 @@
-import {numberToShort} from "../utils/conversions";
-
 const getConsistencyName = (value : number) : string => {
     let consistencyName = ""
 
