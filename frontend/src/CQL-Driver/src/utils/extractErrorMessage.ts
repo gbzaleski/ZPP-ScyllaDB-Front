@@ -1,6 +1,7 @@
 import { getConstantValue } from "typescript";
 import getConsistency from "../functions/Consistency";
 import { bufferToInt, bufferToShort, bufferToShortBytes, bufferToString } from "./conversions";
+import getConsistencyName from "./getConsistencyName";
 const format = require("biguint-format");
 
 const getServerErrorMessage = (errorBody : Buffer) : [string, string] => {
@@ -23,7 +24,7 @@ const getUnavialableExceptionMessage = (errorBody: Buffer): [string, string] => 
 
     const message = 
         "Consistency of query that triggered exception: " +
-        format(consistency) + ". " + 
+        getConsistencyName(Number(format(consistency))) + ". " + 
         "Required nodes alive: " +
         format(required) + ", " + 
         "Current nodes alive: " +
