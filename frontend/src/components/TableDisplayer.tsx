@@ -41,30 +41,32 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
     }
 
     return (
-        <table
-            cellSpacing={"0"}
-            className={classes.cellTable} 
-        >
-            <thead>
-                <tr>
-                    {header}
-                </tr>
-            </thead>
-            <tbody>
-                {content}
-            </tbody>
-            <tfoot>
-                <td colSpan={headers.length} className={classes.cellTd} >
-                    <button className={classes.tableButton} onClick={onBack}>
-                        Back
-                    </button>
-                    <label className={classes.tableLabel}>{page}</label>
-                    <button className={classes.tableButton} onClick={onNext}>
-                        Next
-                    </button>
-                </td>
-            </tfoot>
-        </table>
+        <div className={classes.tableRoller}>
+            <table
+                cellSpacing={"0"}
+                className={classes.cellTable} 
+            >
+                <thead>
+                    <tr>
+                        {header}
+                    </tr>
+                </thead>
+                <tbody>
+                    {content}
+                </tbody>
+                <tfoot>
+                    <td colSpan={headers.length} className={classes.cellTd} >
+                        <button className={classes.tableButton} onClick={onBack}>
+                            Back
+                        </button>
+                        <label className={classes.tableLabel}>{page}</label>
+                        <button className={classes.tableButton} onClick={onNext}>
+                            Next
+                        </button>
+                    </td>
+                </tfoot>
+            </table>
+        </div>
     )
 }
 
@@ -107,6 +109,10 @@ const useStyles = makeStyles(theme => ({
             borderColor: "#f6b93b",
             transition: "all 0.4s ease 0s",
         }
+    },
+
+    tableRoller: {
+        overflowX: 'auto',
     },
 
 }));

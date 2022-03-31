@@ -20,6 +20,8 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
         websocket.current = new WebSocket('ws://localhost:8222');
     }, []);
 
+    const errorResponse = <div className={classes.errorStruct}> {response} </div>;
+
     return (
         <div>
             <hr/>
@@ -39,7 +41,7 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
                         {'>'}
                     </div>
                     <div className={classes.inputContainer}>
-                        {response}
+                        {response.toLocaleLowerCase().includes("error") ? errorResponse : response}
                     </div>
                 </div>)}
             <hr/>
@@ -55,6 +57,7 @@ const useStyles = makeStyles(theme => ({
         alignItems: "flex-start",
         justifyContent: "flex-start"
     },
+
     inputContainer: {
         width: "98%",
         backgroundColor: "black",
@@ -63,8 +66,14 @@ const useStyles = makeStyles(theme => ({
         border: "none",
         fontSize: "24px",
     },
+
     terminalSign: {
         width: "2%",
+    },
+
+    errorStruct: {
+        color: "red",
+        fontWeight: 700,
     },
 }));
 
