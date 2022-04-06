@@ -60,7 +60,6 @@ const useStyles = makeStyles(theme => ({
 
     inputContainer: {
         width: "98%",
-        backgroundColor: "black",
         color: "lightblue",
         outlineWidth: 0,
         border: "none",
@@ -72,7 +71,7 @@ const useStyles = makeStyles(theme => ({
     },
 
     errorStruct: {
-        color: "red",
+        color: "#bb0000",
         fontWeight: 700,
     },
 }));

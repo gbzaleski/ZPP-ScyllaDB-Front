@@ -107,7 +107,7 @@ const Terminal = () => {
                         setCommandResult("");
                         setTableResponse([]);
                     } else if (command.toLowerCase().trim() == "connect") {
-                        setServerResponse("")
+                        setServerResponse("<img src={logo} />")
                         sendConnect(driver);
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
@@ -206,6 +206,7 @@ const Terminal = () => {
                 // When the ArrowDown key is pressed we move up in the command history
                 case "ArrowDown":
                     if (positionInHistory < commandHistory.length && !editMode) {
+                        event.preventDefault();
                         setPositionInHistory(prevState => prevState + 1);
 
                         // Dependently on position command is either retrieved from history or empty
@@ -220,6 +221,7 @@ const Terminal = () => {
                 // When the ArrowUp key is pressed we move down in the command history
                 case "ArrowUp":
                     if (positionInHistory > 0 && !editMode) {
+                        event.preventDefault();
                         setPositionInHistory(prevState => prevState - 1);
                         setCommand(commandHistory[positionInHistory - 1]);
                     }
@@ -234,8 +236,20 @@ const Terminal = () => {
         };
     }, [command, commandHistory, positionInHistory, driver]);
 
+    const logo = require("../assets/logo.webp").default;
+
     return (
         <div className={classes.terminalContainer}>
+            <img 
+                src={logo} 
+                style={{
+                    opacity: 0.2,
+                    position: "absolute",
+                    right: 0,
+                    bottom: 0,
+                    height: "52%",
+                }}
+            />
             <TerminalHistory
                 history={commandHistory}
             />
@@ -262,7 +276,7 @@ const useStyles = makeStyles(theme => ({
     terminalContainer: {
         height: "100%",
         width: "100%",
-        backgroundColor: "black",
+        backgroundColor: "#161616",
         color: "lightblue",
         fontSize: "24px",
     },
@@ -274,7 +288,6 @@ const useStyles = makeStyles(theme => ({
     },
     inputContainer: {
         width: "98%",
-        backgroundColor: "black",
         color: "lightblue",
         outlineWidth: 0,
         border: "none",

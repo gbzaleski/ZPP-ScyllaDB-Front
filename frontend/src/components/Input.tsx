@@ -43,7 +43,7 @@ const useStyles = makeStyles(theme => ({
     },
     inputContainer: {
         width: "98%",
-        backgroundColor: "black",
+        backgroundColor: "#161616",
         color: "lightblue",
         outlineWidth: 0,
         border: "none",

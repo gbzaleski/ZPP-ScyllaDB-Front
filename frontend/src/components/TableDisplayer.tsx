@@ -14,7 +14,7 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
 {
     const classes = useStyles();
 
-    const page = 107; // mock page number
+    const [page, setPageCount] = useState(driver.getPageNumber() + 1);
     const header = headers.map((ele, i) => {
         return <th className={classes.cellTh} key = {i}>{ele}</th>
     })
@@ -27,16 +27,36 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
         </tr>
     })
 
+    const [back, setDisableOnBack] = React.useState(page == 1);
+    const [next, setDisableOnNext] = React.useState(false);
+    const setDisable = () => {
+        //FIXME: waiting for hasNext/PrevPage to be implemented
+        console.log("waiting for hasNext/PrevPage to be implemented");
+        // setDisableOnBack(page <= 2);
+
+        // const nextQ =  driver.getNextPageQuery();
+        // setDisableOnNext(nextQ == null);
+        // if (nextQ != null)
+        //     driver.getPreviousPageQuery();
+    }
+
     const onBack = () => {
         const previousPageQuery = driver.getPreviousPageQuery();
+
         if (previousPageQuery != null) {
-            sendMsg (previousPageQuery)
+            sendMsg(previousPageQuery);
+            setPageCount(page - 1);
+            setDisable();
         }
-    }    
+    }
+    
     const onNext = () => {        
         const nextPageQuery = driver.getNextPageQuery();
+
         if (nextPageQuery != null) {
-            sendMsg (nextPageQuery)
+            sendMsg(nextPageQuery);
+            setPageCount(page + 1);
+            setDisable();
         }
     }
 
@@ -56,11 +76,11 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
                 </tbody>
                 <tfoot>
                     <td colSpan={headers.length} className={classes.cellTd} >
-                        <button className={classes.tableButton} onClick={onBack}>
+                        <button disabled={back} className={classes.tableButton} onClick={onBack}>
                             Back
                         </button>
                         <label className={classes.tableLabel}>{page}</label>
-                        <button className={classes.tableButton} onClick={onNext}>
+                        <button disabled={next} className={classes.tableButton} onClick={onNext}>
                             Next
                         </button>
                     </td>
@@ -78,12 +98,14 @@ const useStyles = makeStyles(theme => ({
     },
 
     cellTh:  {
-        border: "1px solid lightblue;"
+        border: "1px solid lightblue;",
+        padding: "10px",
     },
 
     cellTd:  {
         border: "1px solid lightblue;",
-        textAlign: "center"
+        textAlign: "center",
+        padding: "5px",
     },
 
     tableLabel: {
@@ -94,7 +116,7 @@ const useStyles = makeStyles(theme => ({
         color: "#494949",
         textTransform: "uppercase",
         textDecoration: "none",
-        background: "#ffffff",
+        background: "#eeeeee",
         padding: "5px",
         fontSize: "15px",
         fontWeight: 'bold',
@@ -104,11 +126,31 @@ const useStyles = makeStyles(theme => ({
         transition: "all 0.4s ease 0s",
 
         '&:hover': {
-            color: "navy",
-            background: "#f6b93b",
-            borderColor: "#f6b93b",
+            color: "#3a2d55",
+            background: "#57d1e5",
+            borderColor: "#57d1e5",
             transition: "all 0.4s ease 0s",
-        }
+        },
+
+        '&:hover:active': {
+            background: "#77e1ff",
+            borderColor: "#77e1ff",
+            boxShadow: "0px 0px 25px 2px  rgba(77, 225, 255, 0.7)",
+            transition: "none",
+        },
+
+        '&:disabled': {
+            color: "#666666",
+            background: "#aaaaaa",
+            borderColor: "#bbbbbb",
+        },
+
+        '&:disabled:active': {
+            color: "#666666",
+            background: "#aaaaaa",
+            borderColor: "#bbbbbb",
+            boxShadow: "none",
+        },
     },
 
     tableRoller: {
