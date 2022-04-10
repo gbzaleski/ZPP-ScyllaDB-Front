@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useRef} from "react";
 import TerminalHistory from "./TerminalHistory";
+import LaunchForm from "./LaunchForm";
 
 import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
@@ -20,6 +21,12 @@ const Terminal = () => {
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
+
+    const [adress, setAddress] = useState("");
+    const [port, setPort] = useState<string>("");
+    const [login, setLogin] = useState("");
+    const [password, setPassword] = useState("");
+    const [isFormPassed, setFormPassed] = useState(false);
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
@@ -240,6 +247,17 @@ const Terminal = () => {
 
     return (
         <div className={classes.terminalContainer}>
+            {!isFormPassed && <LaunchForm 
+                 adress={adress}
+                 setAddress={setAddress}
+                 port={port}
+                 setPort={setPort}
+                 login={login}
+                 setLogin={setLogin}
+                 password={password}
+                 setPassword={setPassword}
+                 setFormPassed={setFormPassed}
+            />}
             <img 
                 src={logo} 
                 style={{
