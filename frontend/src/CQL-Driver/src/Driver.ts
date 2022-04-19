@@ -6,6 +6,7 @@ import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
 import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
+import getAuthenticationMessage from "./utils/getAuthenticationMessage";
 
 class CQLDriver {
     #consistency: Consistency
@@ -37,7 +38,10 @@ class CQLDriver {
         this.#preparedStatements = new Map()
     }
 
+
     handshake = handshakeMessage.bind(this)
+
+    authenticate = getAuthenticationMessage.bind(this)
 
     #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
         this.#preparedStatements.set(id, values)
@@ -47,16 +51,14 @@ class CQLDriver {
         return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
     }
 
-    connect = (websocket : any, setResponse : any, setTableResponse : any) : boolean => {
+    connect = (websocket : any, setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
         let driver = this
         websocket.current.addEventListener('open', function (event : any) {
             console.log('Connected to the WS Server!')
         });
-        const coder = new TextEncoder()
-        websocket.current.send(coder.encode(driver.handshake()));
 
-         // Connection closed
-         websocket.current.addEventListener('close', function (event: any) {
+        // Connection closed
+        websocket.current.addEventListener('close', function (event: any) {
             console.log('Disconnected from the WS Server!')
         });
 
@@ -66,12 +68,21 @@ class CQLDriver {
             event.data.arrayBuffer().then((response: any) => {
                 response = driver.getResponse(Buffer.from(response))
                 if (typeof response[0] == "string") {
-                    setResponse(response)
+                    if (response[1] == "READY" || response[1] == "AUTH_SUCCESS") {
+                        setResponse([response[0], ""])
+                    } else if (response[1] == "AUTHENTICATE") {
+                        websocket.current.send(coder.encode(driver.authenticate(user, passwd).toString()))                    
+                    } else {
+                        setResponse(response)
+                    }
                 } else {
                     setTableResponse(response[0])
-                }
+                } 
             })
         });
+
+        const coder = new TextEncoder()
+        websocket.current.send(coder.encode(driver.handshake()));
 
         return true;
     }

@@ -257,6 +257,12 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPrepa
         return ["Invalid optcode:", code.toString()]
     } else if (getOpcodeName(buffer) == "ERROR") {
         return extractErrorMessage(body);
+    } else if (getOpcodeName(buffer) == "READY") {
+        return ["Connection properly established", "READY"];
+    } else if (getOpcodeName(buffer) == "AUTH_SUCCESS") {
+        return ["Successful authentication", "AUTH_SUCCESS"];
+    } else if (getOpcodeName(buffer) == "AUTHENTICATE") {
+        return ["Authentication required", "AUTHENTICATE"];
     } else {
         return ["Unexpected response, cannot be handled.", ""];
     }
