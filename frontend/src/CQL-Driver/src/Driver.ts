@@ -6,6 +6,7 @@ import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
 import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
+import getAuthenticationMessage from "./utils/getAuthenticationMessage";
 
 class CQLDriver {
     #consistency: Consistency
