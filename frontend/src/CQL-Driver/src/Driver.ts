@@ -22,6 +22,7 @@ class CQLDriver {
     #preparedStatements : Map<bigint, Array<Option>>
 
     constructor() {
+        console.log("creating object")
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
         this.#pageSize = 6
@@ -42,7 +43,7 @@ class CQLDriver {
         this.#preparedStatements.set(id, values)
     }
 
-    getResponse = (buf: Buffer) => {
+    getResponse = (buf: Buffer) : [string | Array<Array<string>>, string] => {
         return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
     }
 
@@ -64,10 +65,10 @@ class CQLDriver {
         websocket.current.addEventListener('message', function (event: any) {
             event.data.arrayBuffer().then((response: any) => {
                 response = driver.getResponse(Buffer.from(response))
-                if (typeof response == "string") {
+                if (typeof response[0] == "string") {
                     setResponse(response)
                 } else {
-                    setTableResponse(response)
+                    setTableResponse(response[0])
                 }
             })
         });
@@ -110,6 +111,20 @@ class CQLDriver {
 
     getNumberOfLoadedPages = () : number => {
         return this.#pagingStates.length + 1
+    }
+
+    hasPreviousPage = () : boolean => {
+        if (this.getPageNumber() > 0) {
+            return true
+        }
+        return false
+    }
+
+    hasNextPage = () : boolean => {
+        if (this.getPageNumber() < this.#pagingStates.length) {
+            return true
+        }
+        return false
     }
 
     getPreviousPageQuery = () : Buffer | null => {
