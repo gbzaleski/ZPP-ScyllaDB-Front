@@ -37,6 +37,10 @@ class CQLDriver {
         this.#preparedStatements = new Map()
     }
 
+    authenticate(username: string, password: string) {
+        return getAuthenticationMessage(username, password)
+    }
+
     handshake = handshakeMessage.bind(this)
 
     #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {

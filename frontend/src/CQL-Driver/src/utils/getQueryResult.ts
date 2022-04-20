@@ -257,8 +257,16 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPrepa
         return ["Invalid optcode:", code.toString()]
     } else if (getOpcodeName(buffer) == "ERROR") {
         return extractErrorMessage(body);
+    } else if (getOpcodeName(buffer) == "AUTHENTICATE") {
+        return ["Authentication required", buffer.toString()]
+    } else if (getOpcodeName(buffer) == "READY") {
+        return ["Ready", buffer.toString()]
+    } else if (getOpcodeName(buffer) == "AUTH_CHALLENGE") {
+        return ["Authentication challenge", buffer.toString()]
+    } else if (getOpcodeName(buffer) == "AUTH_SUCCESS") {
+        return ["Authentication success", ""]
     } else {
-        return ["Unexpected response, cannot be handled.", ""];
+        return ["Unexpected response, cannot be handled.", ""]
     }
 }
 
