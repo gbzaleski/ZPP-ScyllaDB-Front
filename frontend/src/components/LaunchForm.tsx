@@ -66,6 +66,7 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
                     value={adress}
                     onChange={changeAddress}
                     placeholder={DEFUALT_ADDRESS}
+                    className={classes.styledInput}
                 />
             </div>
 
@@ -76,6 +77,7 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
                     value={port}
                     onChange={changePort}
                     placeholder={DEFAULT_PORT}
+                    className={classes.styledInput}
                 />
             </div>
 
@@ -85,6 +87,7 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
                     defaultValue=""
                     value={login}
                     onChange={changeLogin}
+                    className={classes.styledInput}
                 />
             </div>
 
@@ -95,10 +98,11 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
                     value={password}
                     onChange={changePassword}
                     type="password"
+                    className={classes.styledInput}
                 />
             </div>
 
-            <button>
+            <button className={classes.launchPadButton}>
                 Connect
             </button>
         </form>
@@ -116,7 +120,7 @@ const useStyles = makeStyles(theme => ({
     },
 
     content: {
-        fontSize: "80%",
+        fontSize: "120%",
         backgroundColor: "#0b0b61",
         width: "fit-content",
         margin: "auto",
@@ -124,13 +128,23 @@ const useStyles = makeStyles(theme => ({
         flexDirection: "column",
         justifyContent: 'center',
         alignItems: 'center',
-        marginTop: '20px',
-        padding: "25px",
-        borderRadius: "15px",
+        marginTop: '30px',
+        padding: "35px",
+        borderRadius: "20px",
+        paddingBottom: "20px",
     },
 
     element: {
         marginBottom: "10px",
+    },
+
+    styledInput: {
+        fontSize: "100%",
+    },
+
+    launchPadButton: {
+        fontSize: "100%",
+        marginTop: "10px",
     }
 }));
 
