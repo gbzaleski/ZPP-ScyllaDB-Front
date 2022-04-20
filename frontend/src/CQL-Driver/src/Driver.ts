@@ -43,7 +43,7 @@ class CQLDriver {
         this.#preparedStatements.set(id, values)
     }
 
-    getResponse = (buf: Buffer) => {
+    getResponse = (buf: Buffer) : [string | Array<Array<string>>, string] => {
         return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
     }
 
@@ -65,10 +65,10 @@ class CQLDriver {
         websocket.current.addEventListener('message', function (event: any) {
             event.data.arrayBuffer().then((response: any) => {
                 response = driver.getResponse(Buffer.from(response))
-                if (typeof response == "string") {
+                if (typeof response[0] == "string") {
                     setResponse(response)
                 } else {
-                    setTableResponse(response)
+                    setTableResponse(response[0])
                 }
             })
         });

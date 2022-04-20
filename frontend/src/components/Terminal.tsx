@@ -12,7 +12,7 @@ const Terminal = () => {
     const [commandResult, setCommandResult] = useState("");
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
-    const [serverResponse, setServerResponse] = useState<string>("");
+    const [serverResponse, setServerResponse] = useState<[string, string]>(["", ""]);
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
 
@@ -118,7 +118,7 @@ const Terminal = () => {
                     else if (command.toLowerCase().trim() == "clear")
                     {
                         clearInput();
-                        setServerResponse("");
+                        setServerResponse(["", ""]);
                         setPositionInHistory(0);
                         setCommandHistory([]);
                         setCommandResult("");
@@ -148,7 +148,7 @@ const Terminal = () => {
                         }
 
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        setServerResponse("")
+                        setServerResponse(["", ""])
                         clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
@@ -164,7 +164,7 @@ const Terminal = () => {
                         sendMsg(driver.prepare(prepareArg))
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
-                        setServerResponse("")
+                        setServerResponse(["",""])
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "EXECUTE") {
@@ -182,19 +182,19 @@ const Terminal = () => {
                         }
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
-                        setServerResponse("")
+                        setServerResponse(["", ""])
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 1 && tokenizedCommand[0] == "CONSISTENCY") {
-                        setServerResponse("Current consistency level is " + driver.getConsistency() + ".")
+                        setServerResponse(["Current consistency level is " + driver.getConsistency() + ".", ""])
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setTableResponse([]);
                         setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length == 2 && tokenizedCommand[0] == "CONSISTENCY") {
-                        setServerResponse(driver.setConsistency(tokenizedCommand[1]) == 0 ?
+                        setServerResponse([driver.setConsistency(tokenizedCommand[1]) == 0 ?
                             "Successfully changed consistency level to " + tokenizedCommand[1] + "." :
-                            "Invalid consistency level")
+                            "Invalid consistency level", ""])
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setTableResponse([]);
@@ -204,7 +204,7 @@ const Terminal = () => {
                         if (editMode && command.trim().slice(-1) !== ';') // Commands are to end with semicolon
                             break;
 
-                        setServerResponse("")
+                        setServerResponse(["", ""])
                         sendMsg(driver.query(command));
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
