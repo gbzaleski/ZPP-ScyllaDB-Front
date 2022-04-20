@@ -12,9 +12,10 @@ interface LaunchFormProps {
     password : string;
     setPassword : (s : string) => void;
     setFormPassed : (b : boolean) => void;
+    connectUser : () => void;
 }
 
-function LaunchForm({adress, setAddress, port, setPort, login, setLogin, password, setPassword, setFormPassed} : LaunchFormProps)
+function LaunchForm({adress, setAddress, port, setPort, login, setLogin, password, setPassword, setFormPassed, connectUser} : LaunchFormProps)
 {
     const classes = useStyles();
 
@@ -42,12 +43,17 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
         e.preventDefault();
 
         if (adress === "")
+        {
+            // Tu się dzieją sus rzeczy. TODO: ogarnc ale juz zrobie commita
+            console.log(adress, DEFUALT_ADDRESS);
             setAddress(DEFUALT_ADDRESS);
+            console.log(adress, DEFUALT_ADDRESS);
+        }
 
-        if (port == "")
+        if (port === "")
             setPort(DEFAULT_PORT);
 
-        //console.log(adress, port, login, password)
+        connectUser();
         setFormPassed(true);
     }
 
@@ -69,6 +75,7 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
                     defaultValue=""
                     value={port}
                     onChange={changePort}
+                    placeholder={DEFAULT_PORT}
                 />
             </div>
 
@@ -106,7 +113,6 @@ const useStyles = makeStyles(theme => ({
         backgroundSize: "cover",
         backgroundColor: "#161616",
         opacity:"0.8",
-        //filter: "blur(5px)", TODO: Blur
     },
 
     content: {
