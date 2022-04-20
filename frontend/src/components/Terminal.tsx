@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useRef} from "react";
 import TerminalHistory from "./TerminalHistory";
+import LaunchForm from "./LaunchForm";
 
 import {makeStyles} from "@material-ui/core/styles";
 import Input from "./Input";
@@ -20,6 +21,12 @@ const Terminal = () => {
     const webSocket:any = useRef();
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
+
+    const [adress, setAddress] = useState<string>("");
+    const [port, setPort] = useState<string>("");
+    const [login, setLogin] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [isFormPassed, setFormPassed] = useState(false);
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
@@ -46,6 +53,16 @@ const Terminal = () => {
 
     const sendConnect = (driver : CQLDriver) => {
         driver.connect(webSocket, setServerResponse, setTableResponse);
+    }
+
+    const connectUser = () => {
+        setServerResponse("")
+        sendConnect(driver);
+        clearInput();
+        setTableResponse([]);
+
+        // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
+        console.log("Passed: ", login, password, adress, port)
     }
 
     // Retrieving previously used commands from the localStorage
@@ -106,13 +123,6 @@ const Terminal = () => {
                         setCommandHistory([]);
                         setCommandResult("");
                         setTableResponse([]);
-                    } else if (command.toLowerCase().trim() == "connect") {
-                        setServerResponse(["<img src={logo} />", ""])
-                        sendConnect(driver);
-                        setCommandHistory((prevState: Array<string>) => [...prevState, command]);
-                        clearInput();
-                        setTableResponse([]);
-                        setPositionInHistory(commandHistory.length + 1);
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PAGING") {
                         // Rest of arguments are ignored - we can change it for required precise 2 arguemnts
                         const newPagingMode = tokenizedCommand[1].trim();
@@ -240,6 +250,18 @@ const Terminal = () => {
 
     return (
         <div className={classes.terminalContainer}>
+            {!isFormPassed && <LaunchForm 
+                 adress={adress}
+                 setAddress={setAddress}
+                 port={port}
+                 setPort={setPort}
+                 login={login}
+                 setLogin={setLogin}
+                 password={password}
+                 setPassword={setPassword}
+                 setFormPassed={setFormPassed}
+                 connectUser={connectUser}
+            />}
             <img 
                 src={logo} 
                 style={{

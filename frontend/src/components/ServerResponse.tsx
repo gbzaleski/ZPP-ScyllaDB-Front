@@ -72,10 +72,10 @@ const useStyles = makeStyles(theme => ({
     },
 
     errorStruct: {
-        color: "#BB0000",
-        fontWeight: 600,
+        color: "#bb0000",
+        fontWeight: 700,
     },
-
+  
     errorTag: {
         color: "#F44336",
         fontWeight: 900,
