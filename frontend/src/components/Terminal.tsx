@@ -56,7 +56,7 @@ const Terminal = () => {
     }
 
     const connectUser = () => {
-        setServerResponse("")
+        setServerResponse(["", ""])
         sendConnect(driver);
         clearInput();
         setTableResponse([]);

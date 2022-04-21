@@ -43,12 +43,7 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
         e.preventDefault();
 
         if (adress === "")
-        {
-            // Tu się dzieją sus rzeczy. TODO: ogarnc ale juz zrobie commita
-            console.log(adress, DEFUALT_ADDRESS);
             setAddress(DEFUALT_ADDRESS);
-            console.log(adress, DEFUALT_ADDRESS);
-        }
 
         if (port === "")
             setPort(DEFAULT_PORT);
