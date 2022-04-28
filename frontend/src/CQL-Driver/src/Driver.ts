@@ -6,6 +6,8 @@ import getQueryMessage from "./utils/getQueryMessage";
 import getQueryResult from "./utils/getQueryResult";
 import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
+import getAuthenticationMessage from "./utils/getAuthenticationMessage";
+import getLength from "./utils/getLength";
 
 class CQLDriver {
     #consistency: Consistency
@@ -19,6 +21,8 @@ class CQLDriver {
     #expectedIndex : number
     #expectingNewQuery : boolean
     #bindValues : Array<string>
+    #lastHeader : Buffer
+    #lastBody : Buffer
     #preparedStatements : Map<bigint, Array<Option>>
 
     constructor() {
@@ -30,6 +34,8 @@ class CQLDriver {
         this.#pagingStates = []
         this.#pagingIndex = -1
         this.#expectedIndex = 0
+        this.#lastBody = Buffer.from("")
+        this.#lastHeader = Buffer.from("")
         this.#lastQuery = ""
         this.#lastQueryType = "QUERY"
         this.#expectingNewQuery = true
@@ -37,26 +43,46 @@ class CQLDriver {
         this.#preparedStatements = new Map()
     }
 
+
     handshake = handshakeMessage.bind(this)
+
+    authenticate = getAuthenticationMessage.bind(this)
 
     #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
         this.#preparedStatements.set(id, values)
     }
 
-    getResponse = (buf: Buffer) : [string | Array<Array<string>>, string] => {
-        return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
+    setLastBody = (buf : Buffer) : void => {
+        this.#lastBody = buf
     }
 
-    connect = (websocket : any, setResponse : any, setTableResponse : any) : boolean => {
+    setLastHeader = (buf: Buffer) : void => {
+        this.#lastHeader = buf
+    }
+
+    getResponse = (buf: Buffer) : [string | Array<Array<string>>, string] => {
+        console.log(buf)
+        if (this.#lastBody == Buffer.from("")) {
+            return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
+        } else {
+            console.log(getLength(this.#lastHeader), this.#lastBody.length + buf.length)
+            this.#lastBody = Buffer.concat([this.#lastBody, buf])
+            if (getLength(this.#lastHeader) <= this.#lastBody.length) {
+                return getQueryResult(this, Buffer.concat([this.#lastHeader, this.#lastBody]), this.#setKeyspace, this.#addPreparedStatement)
+            } else {
+                return ["Not complete response",""]
+            }
+        }
+    }
+
+    connect = (websocket : any, setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
         let driver = this
         websocket.current.addEventListener('open', function (event : any) {
             console.log('Connected to the WS Server!')
         });
-        const coder = new TextEncoder()
-        websocket.current.send(coder.encode(driver.handshake()));
 
-         // Connection closed
-         websocket.current.addEventListener('close', function (event: any) {
+        // Connection closed
+        websocket.current.addEventListener('close', function (event: any) {
             console.log('Disconnected from the WS Server!')
         });
 
@@ -66,12 +92,21 @@ class CQLDriver {
             event.data.arrayBuffer().then((response: any) => {
                 response = driver.getResponse(Buffer.from(response))
                 if (typeof response[0] == "string") {
-                    setResponse(response)
+                    if (response[1] == "READY" || response[1] == "AUTH_SUCCESS") {
+                        setResponse([response[0], ""])
+                    } else if (response[1] == "AUTHENTICATE") {
+                        websocket.current.send(coder.encode(driver.authenticate(user, passwd).toString()))                    
+                    } else {
+                        setResponse(response)
+                    }
                 } else {
                     setTableResponse(response[0])
-                }
+                } 
             })
         });
+
+        const coder = new TextEncoder()
+        websocket.current.send(coder.encode(driver.handshake()));
 
         return true;
     }

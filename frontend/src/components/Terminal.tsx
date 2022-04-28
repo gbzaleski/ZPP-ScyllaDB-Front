@@ -51,13 +51,13 @@ const Terminal = () => {
         webSocket.current.send(msg);
     }
 
-    const sendConnect = (driver : CQLDriver) => {
-        driver.connect(webSocket, setServerResponse, setTableResponse);
+    const sendConnect = (driver : CQLDriver, username : string, password : string) => {
+        driver.connect(webSocket, setServerResponse, setTableResponse, username, password);
     }
 
     const connectUser = () => {
         setServerResponse(["", ""])
-        sendConnect(driver);
+        sendConnect(driver, login, password);
         clearInput();
         setTableResponse([]);
 
