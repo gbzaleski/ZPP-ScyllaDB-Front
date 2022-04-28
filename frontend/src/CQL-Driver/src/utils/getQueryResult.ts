@@ -21,6 +21,8 @@ const getVoidResult = () : [string, string] => {
 }
 
 const getRowsResult = (driver : CQLDriver, buf : Buffer) : [string  | Array<Array<string>>, ""] => {
+    
+    console.log("response", buf)
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -232,39 +234,47 @@ const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPrepa
     const length = getLength(buffer)
     //console.log(length)
     const body = buffer.slice(9, 9 + Number(length));
+    if (body.length >= length) {
+        driver.setLastBody(Buffer.from(""))
+        driver.setLastHeader(Buffer.from(""))
+        let code = Number(format(body.slice(0, 4)))
+        
+        if (getOpcodeName(buffer) == "RESULT") {
+            switch (code) {
+                case 1: {
+                    return getVoidResult();
+                }
+                case 2: {
+                    //return "Rows";
+                    return getRowsResult(driver, body.slice(4, Number(length)))
+                }
+                case 3: {
+                    return getSetKeyspaceResult(body.slice(4, Number(length)), setKeyspace);
+                }
+                case 4: {
+                    return getPreparedResult(body.slice(4, Number(length)), addPreparedStatement);
+                }
+                case 5: {
+                    return getSchemaChangeResult(body.slice(4, Number(length)));
+                }
+            }
 
-    let code = Number(format(body.slice(0, 4)))
-    if (getOpcodeName(buffer) == "RESULT") {
-        switch (code) {
-            case 1: {
-                return getVoidResult();
-            }
-            case 2: {
-                //return "Rows";
-                return getRowsResult(driver, body.slice(4, Number(length)))
-            }
-            case 3: {
-                return getSetKeyspaceResult(body.slice(4, Number(length)), setKeyspace);
-            }
-            case 4: {
-                return getPreparedResult(body.slice(4, Number(length)), addPreparedStatement);
-            }
-            case 5: {
-                return getSchemaChangeResult(body.slice(4, Number(length)));
-            }
+            return ["Invalid optcode:", code.toString()]
+        } else if (getOpcodeName(buffer) == "ERROR") {
+            return extractErrorMessage(body);
+        } else if (getOpcodeName(buffer) == "READY") {
+            return ["Connection properly established", "READY"];
+        } else if (getOpcodeName(buffer) == "AUTH_SUCCESS") {
+            return ["Successful authentication", "AUTH_SUCCESS"];
+        } else if (getOpcodeName(buffer) == "AUTHENTICATE") {
+            return ["Authentication required", "AUTHENTICATE"];
+        } else {
+            return ["Unexpected response, cannot be handled.", ""];
         }
-
-        return ["Invalid optcode:", code.toString()]
-    } else if (getOpcodeName(buffer) == "ERROR") {
-        return extractErrorMessage(body);
-    } else if (getOpcodeName(buffer) == "READY") {
-        return ["Connection properly established", "READY"];
-    } else if (getOpcodeName(buffer) == "AUTH_SUCCESS") {
-        return ["Successful authentication", "AUTH_SUCCESS"];
-    } else if (getOpcodeName(buffer) == "AUTHENTICATE") {
-        return ["Authentication required", "AUTHENTICATE"];
     } else {
-        return ["Unexpected response, cannot be handled.", ""];
+        driver.setLastBody(body)
+        driver.setLastHeader(buffer.slice(0, 9))
+        return ["Not complete response",""]
     }
 }
 

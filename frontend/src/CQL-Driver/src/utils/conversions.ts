@@ -87,8 +87,6 @@ export const bufferToOption = (buf : Buffer) : Option  =>  {
 
 export const bufferToString = (buf : Buffer) : String => {
     const len = Number(format(buf.slice(0, 2)))
-    console.log(len)
-    console.log(buf.slice(2, len + 2))
     return {length: numberToShort(BigInt(len)), string: buf.slice(2, len + 2)}
 }
 
@@ -109,7 +107,6 @@ export const bufferToShortBytes = (buf : Buffer) : ShortBytes => {
 }
 
 export const optionToReadableString = (id : Short, byt: Bytes) : string => {
-    console.log(id)
     const idVal = format(id.short)
 
     let result = "";

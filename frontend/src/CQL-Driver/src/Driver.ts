@@ -7,6 +7,7 @@ import getQueryResult from "./utils/getQueryResult";
 import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
 import getAuthenticationMessage from "./utils/getAuthenticationMessage";
+import getLength from "./utils/getLength";
 
 class CQLDriver {
     #consistency: Consistency
@@ -20,6 +21,8 @@ class CQLDriver {
     #expectedIndex : number
     #expectingNewQuery : boolean
     #bindValues : Array<string>
+    #lastHeader : Buffer
+    #lastBody : Buffer
     #preparedStatements : Map<bigint, Array<Option>>
 
     constructor() {
@@ -31,6 +34,8 @@ class CQLDriver {
         this.#pagingStates = []
         this.#pagingIndex = -1
         this.#expectedIndex = 0
+        this.#lastBody = Buffer.from("")
+        this.#lastHeader = Buffer.from("")
         this.#lastQuery = ""
         this.#lastQueryType = "QUERY"
         this.#expectingNewQuery = true
@@ -47,8 +52,27 @@ class CQLDriver {
         this.#preparedStatements.set(id, values)
     }
 
+    setLastBody = (buf : Buffer) : void => {
+        this.#lastBody = buf
+    }
+
+    setLastHeader = (buf: Buffer) : void => {
+        this.#lastHeader = buf
+    }
+
     getResponse = (buf: Buffer) : [string | Array<Array<string>>, string] => {
-        return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
+        console.log(buf)
+        if (this.#lastBody == Buffer.from("")) {
+            return getQueryResult(this, buf, this.#setKeyspace, this.#addPreparedStatement)
+        } else {
+            console.log(getLength(this.#lastHeader), this.#lastBody.length + buf.length)
+            this.#lastBody = Buffer.concat([this.#lastBody, buf])
+            if (getLength(this.#lastHeader) <= this.#lastBody.length) {
+                return getQueryResult(this, Buffer.concat([this.#lastHeader, this.#lastBody]), this.#setKeyspace, this.#addPreparedStatement)
+            } else {
+                return ["Not complete response",""]
+            }
+        }
     }
 
     connect = (websocket : any, setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
