@@ -8,8 +8,13 @@ import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
 import getAuthenticationMessage from "./utils/getAuthenticationMessage";
 import getLength from "./utils/getLength";
+import {Blob} from 'buffer'
+import {isBrowser} from "browser-or-node"
+import { WebSocket as WWebSocket} from "ws";
+
 
 class CQLDriver {
+    #websocket : any
     #consistency: Consistency
     #keyspace : string
     #pageSize: number
@@ -27,6 +32,9 @@ class CQLDriver {
 
     constructor() {
         console.log("creating object")
+        this.#websocket = isBrowser ? new WebSocket("ws://localhost:8222")
+        : this.#websocket = new WWebSocket('ws://localhost:8222')
+        console.log(this.#websocket)
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
         this.#pageSize = 6
@@ -75,27 +83,38 @@ class CQLDriver {
         }
     }
 
-    connect = (websocket : any, setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
+    connect = (setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
         let driver = this
-        websocket.current.addEventListener('open', function (event : any) {
+        let ws = this.#websocket
+
+        ws.addEventListener('open', function (event : any) {
             console.log('Connected to the WS Server!')
         });
-
         // Connection closed
-        websocket.current.addEventListener('close', function (event: any) {
+        ws.addEventListener('close', function (event: any) {
             console.log('Disconnected from the WS Server!')
         });
 
         // Listen for messages
-        
-        websocket.current.addEventListener('message', function (event: any) {
-            event.data.arrayBuffer().then((response: any) => {
+        const coder = new TextEncoder()
+
+        ws.addEventListener('message', function (event: any) {
+          
+            let received = event.data
+            if (Buffer.isBuffer(event.data)) {
+                received = new Blob([event.data]) 
+            }
+
+            //event.data=new Blob(event.data)
+            received.arrayBuffer().then((response: any) => {
                 response = driver.getResponse(Buffer.from(response))
+                console.log(response)
                 if (typeof response[0] == "string") {
                     if (response[1] == "READY" || response[1] == "AUTH_SUCCESS") {
                         setResponse([response[0], ""])
                     } else if (response[1] == "AUTHENTICATE") {
-                        websocket.current.send(coder.encode(driver.authenticate(user, passwd).toString()))                    
+                        ws.send(coder.encode(driver.authenticate(user, passwd).toString()))                    
+                        
                     } else {
                         setResponse(response)
                     }
@@ -105,18 +124,22 @@ class CQLDriver {
             })
         });
 
-        const coder = new TextEncoder()
-        websocket.current.send(coder.encode(driver.handshake()));
+        
+        ws.send(coder.encode(driver.handshake()));
 
         return true;
     }
 
-    query = (body : string, pagingState? : Bytes) : Buffer => {
+    isReady = () => {
+        return this.#websocket.readyState == WWebSocket.OPEN
+    }
+
+    query = (body : string, pagingState? : Bytes) : void => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "QUERY"
         this.#bindValues = []
-        return getQueryMessage(this, body, this.#setLastQuery, pagingState);
+        this.#websocket.send(getQueryMessage(this, body, this.#setLastQuery, pagingState));
     }
 
     prepare = (body : string) : Buffer => {

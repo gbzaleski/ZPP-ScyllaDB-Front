@@ -52,7 +52,7 @@ const Terminal = () => {
     }
 
     const sendConnect = (driver : CQLDriver, username : string, password : string) => {
-        driver.connect(webSocket, setServerResponse, setTableResponse, username, password);
+        driver.connect(setServerResponse, setTableResponse, username, password);
     }
 
     const connectUser = () => {
@@ -205,7 +205,7 @@ const Terminal = () => {
                             break;
 
                         setServerResponse(["", ""])
-                        sendMsg(driver.query(command));
+                        driver.query(command);
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setTableResponse([]);
