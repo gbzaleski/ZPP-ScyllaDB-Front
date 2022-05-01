@@ -100,20 +100,6 @@ export class BOOLEAN implements type {
     }
 }
 
-export class COUNTER implements type {
-    constructor(data: Buffer | string) {
-
-    }
-
-    toString() {
-        return ""
-    }
-
-    toCQL() {
-        return Buffer.from("")
-    }
-}
-
 // Number represented as unscaled * 10 ^ scale
 export class DECIMAL implements type {
     scale = 0n

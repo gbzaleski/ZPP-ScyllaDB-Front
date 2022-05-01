@@ -36,10 +36,12 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
 
     const onBack = () => {
        driver.getPreviousPageQuery();
+       setDisable()
     }
     
     const onNext = () => {        
         driver.getNextPageQuery();
+        setDisable()
     }
 
     return (

@@ -22,8 +22,8 @@ const Terminal = () => {
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
 
-    const [adress, setAddress] = useState<string>("");
-    const [port, setPort] = useState<string>("");
+    const [adress, setAddress] = useState<string>("localhost");
+    const [port, setPort] = useState<string>("8222");
     const [login, setLogin] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [isFormPassed, setFormPassed] = useState(false);
@@ -57,12 +57,17 @@ const Terminal = () => {
 
     const connectUser = () => {
         setServerResponse(["", ""])
-        sendConnect(driver, login, password);
-        clearInput();
-        setTableResponse([]);
+        driver.recreate(adress, port).then(() => {
+            sendConnect(driver, login, password);
+            clearInput();
+            setTableResponse([]);
 
-        // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
-        console.log("Passed: ", login, password, adress, port)
+            // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
+            console.log("Passed: ", login, password, adress, port)
+        })
+        .catch((e) => {
+            console.log("Could not connect")
+        })
     }
 
     // Retrieving previously used commands from the localStorage
