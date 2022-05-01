@@ -254,8 +254,9 @@ export class LIST implements type {
         let buf = Buffer.alloc(4)
         buf.writeInt32BE(this.list.length, 0)
         for (let i = 0; i < this.list.length; ++i) {
-            if (this.list[i] != null) {
-                buf = Buffer.concat([buf, this.list[i].toCQL()])
+            const el = this.list[i]
+            if (el !== null) {
+                buf = Buffer.concat([buf, el.toCQL()])
             }  else {
                 buf = Buffer.concat([buf, Buffer.alloc(4)])
             }
@@ -309,13 +310,15 @@ export class MAP implements type {
         let buf = Buffer.alloc(4)
         buf.writeInt32BE(this.container.length, 0)
         for (let i = 0; i < this.container.length; ++i) {
-            if (this.container[i][0] != null) {
-                buf = Buffer.concat([buf, this.container[i][0].toCQL()])
+            const el1 = this.container[i][0]
+            if (el1 != null) {
+                buf = Buffer.concat([buf, el1.toCQL()])
             } else {
                 buf = Buffer.concat([buf, Buffer.alloc(4)])
             }
-            if (this.container[i][1] != null) {
-                buf = Buffer.concat([buf, this.container[i][1].toCQL()])
+            const el2 = this.container[i][1]
+            if (el2 != null) {
+                buf = Buffer.concat([buf, el2.toCQL()])
             } else {
                 buf = Buffer.concat([buf, Buffer.alloc(4)])
             }
@@ -351,8 +354,9 @@ export class SET implements type {
         let buf = Buffer.alloc(4)
         buf.writeInt32BE(this.list.length, 0)
         for (let i = 0; i < this.list.length; ++i) {
-            if (this.list[i] != null) {
-                buf = Buffer.concat([buf, this.list[i].toCQL()])
+            const el = this.list[i]
+            if (el != null) {
+                buf = Buffer.concat([buf, el.toCQL()])
             } else {
                 buf = Buffer.concat([buf, Buffer.alloc(4)])
             }

@@ -54,7 +54,9 @@ class CQLDriver {
 
     handshake = handshakeMessage.bind(this)
 
-    authenticate = getAuthenticationMessage.bind(this)
+    authenticate = (login : string, passwd : string) => {
+        this.#websocket.send(getAuthenticationMessage(login, passwd))
+    } 
 
     #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
         this.#preparedStatements.set(id, values)
@@ -113,8 +115,7 @@ class CQLDriver {
                     if (response[1] == "READY" || response[1] == "AUTH_SUCCESS") {
                         setResponse([response[0], ""])
                     } else if (response[1] == "AUTHENTICATE") {
-                        ws.send(coder.encode(driver.authenticate(user, passwd).toString()))                    
-                        
+                        driver.authenticate(user, passwd)                   
                     } else {
                         setResponse(response)
                     }
@@ -150,15 +151,14 @@ class CQLDriver {
         this.#websocket.send(getPrepareMessage(body))
     }
 
-    execute = (body : string, bindValues : Array<string>) : void => {
+    execute = (body : string, bindValues : Array<string>) : void | string => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "EXECUTE"
         this.#bindValues = bindValues
         const result = this.#preparedStatements.get(BigInt(body))
-
         if (result == undefined) {
-            return;
+            return "Query with id " + body + " is not prepared";
         }
        
         this.#websocket.send(getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues, result));

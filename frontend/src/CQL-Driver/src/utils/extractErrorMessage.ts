@@ -11,7 +11,7 @@ const getProtocolErrorMessage = (errorBody : Buffer) : [string, string] => {
 }
 
 const getAuthenticationErrorMessage = (errorBody : Buffer) : [string, string] => {
-    return [bufferToString(errorBody).string.toString(), "Autentication Error"]
+    return [bufferToString(errorBody).string.toString(), "Authentication Error"]
 }
 
 

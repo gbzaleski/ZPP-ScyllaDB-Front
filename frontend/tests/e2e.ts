@@ -17,7 +17,7 @@ const waitForFlag = async (condition: () => Boolean) => {
 };
 
 describe('End to end tests', () => {
-    /*it('Scenario One', async () => {
+    it('Scenario One - Paging', async () => {
         let driver = new CQLDriver()
 
         let serverResponse = ["", ""]
@@ -48,7 +48,7 @@ describe('End to end tests', () => {
             .then(async () => {
                 try {
                     driver.connect(setServerResponseWithFlag, setTableResponseWithFlag, "cassandra", "cassandra")
-                    expect(await (check(0))).to.eql(["Connection properly established", ""])
+                    expect(await (check(0))).to.eql(["Successful authentication", ""])
                     gotFlag = false
                     driver.query("SELECT * FROM system_schema.keyspaces")
                     expect(await (check(1))).to.have.lengthOf(7)
@@ -85,7 +85,7 @@ describe('End to end tests', () => {
             driver.endWebsocket()
     });
 
-    it('Scenario Two', async () => {
+    it('Scenario Two - Simple queries', async () => {
         let driver = new CQLDriver()
 
         let serverResponse = ["", ""]
@@ -116,7 +116,7 @@ describe('End to end tests', () => {
             .then(async () => {
                 try {
                     driver.connect(setServerResponseWithFlag, setTableResponseWithFlag, "cassandra", "cassandra")
-                    expect(await (check(0))).to.eql(["Connection properly established", ""])
+                    expect(await (check(0))).to.eql(["Successful authentication", ""])
                     gotFlag = false
                     // Deleting in case it already exists
                     driver.query("DROP KEYSPACE test")
@@ -163,10 +163,10 @@ describe('End to end tests', () => {
                 false
             }))).to.equal(true)
             driver.endWebsocket()
-    }).timeout(50000);*/
+    }).timeout(5000);
 
 
-    it('Scenario Three', async () => {
+    it('Scenario Three - Prepare and execute', async () => {
         let driver = new CQLDriver()
 
         let serverResponse = ["", ""]
@@ -197,7 +197,7 @@ describe('End to end tests', () => {
             .then(async () => {
                 try {
                     driver.connect(setServerResponseWithFlag, setTableResponseWithFlag, "cassandra", "cassandra")
-                    expect(await (check(0))).to.eql(["Connection properly established", ""])
+                    expect(await (check(0))).to.eql(["Successful authentication", ""])
                     gotFlag = false
                     // Deleting in case it already exists
                     driver.query("DROP KEYSPACE test")
@@ -229,12 +229,13 @@ describe('End to end tests', () => {
                     gotFlag = false
                     if (typeof id[0] == "string") {
                         const message = id[0].split(" ")
-                        driver.execute(message[message.length - 1], ["2137"])
+                        driver.execute(message[message.length - 1], ["-2137"])
                     } else {
                         expect(true).to.eql(false)
                     }
-                    expect(await (check(1))).to.have.lengthOf(4)
-                    
+                    const execResponse = await (check (1))
+                    expect(execResponse).to.have.lengthOf(4)
+                    expect(execResponse[3]).to.include("-2137")
 
                 } catch (error: any) {
                     console.log("Expected: ", error.expected)
@@ -248,6 +249,119 @@ describe('End to end tests', () => {
                 false
             }))).to.equal(true)
             driver.endWebsocket()
-    }).timeout(50000);
+    }).timeout(5000); 
+
+    it('Scenario Four authentication', async () => {
+        let driver = new CQLDriver()
+
+        let serverResponse = ["", ""]
+        let tableResponse: string[][] = [[]]
+        let gotFlag = false
+        const setServerResponseWithFlag = (val: [string, string]): void => {
+            serverResponse = val
+            gotFlag = true
+        }
+        const setTableResponseWithFlag = (val: string[][]): void => {
+            tableResponse = val
+            gotFlag = true
+        }
+        const check = async (type : number) => {
+            const val = await (waitForFlag(() => gotFlag)
+                .then(async () => {
+                    if (type == 0) {
+                        return serverResponse
+                    } else {
+                        return tableResponse
+                    }
+                })
+                .catch((msg: string[][]) => msg))
+            return val
+        }
+
+        expect(await (waitForFlag(() => driver.isReady())
+            .then(async () => {
+                try {
+                    driver.connect(setServerResponseWithFlag, setTableResponseWithFlag, "capandra", "capandra")
+                    expect(await (check(0))).to.eql(["Username and/or password are incorrect", "Authentication Error"])
+                    gotFlag = false
+                    driver.authenticate("cassandra", "capandra")
+                    expect(await (check(0))).to.eql(["Username and/or password are incorrect", "Authentication Error"])
+                    gotFlag = false
+                    driver.authenticate("cassandra", "cassandra")
+                    expect(await (check(0))).to.eql(["Successful authentication", ""])
+                    gotFlag = false  
+                } catch (error: any) {
+                    console.log("Expected: ", error.expected)
+                    console.log("But got: ", error.actual)
+                    driver.endWebsocket()
+                    return false
+                }
+                return true
+            })
+            .catch((msg: string) => {
+                false
+            }))).to.equal(true)
+            driver.endWebsocket()
+    });
+
+
+    it('Scenario Five - Error handling', async () => {
+        let driver = new CQLDriver()
+
+        let serverResponse = ["", ""]
+        let tableResponse: string[][] = [[]]
+        let gotFlag = false
+        const setServerResponseWithFlag = (val: [string, string]): void => {
+            serverResponse = val
+            gotFlag = true
+        }
+        const setTableResponseWithFlag = (val: string[][]): void => {
+            tableResponse = val
+            gotFlag = true
+        }
+        const check = async (type : number) => {
+            const val = await (waitForFlag(() => gotFlag)
+                .then(async () => {
+                    if (type == 0) {
+                        return serverResponse
+                    } else {
+                        return tableResponse
+                    }
+                })
+                .catch((msg: string[][]) => msg))
+            return val
+        }
+
+        expect(await (waitForFlag(() => driver.isReady())
+            .then(async () => {
+                try {
+                    driver.connect(setServerResponseWithFlag, setTableResponseWithFlag, "cassandra", "cassandra")
+                    expect(await (check(0))).to.eql(["Successful authentication", ""])
+                    gotFlag = false
+                    // In case it exists
+                    driver.query("DROP KEYSPACE testing")
+                    console.log(await (check(0)))
+                    gotFlag = false
+                    driver.query("USE testing")
+                    expect(await (check(0))).to.eql(["Keyspace 'testing' does not exist", "Invalid"])
+                    gotFlag = false
+                    driver.query("Setp")
+                    expect(await (check(0))).to.eql(["line 1:0 no viable alternative at input 'Setp'", "Syntax Error"])
+                    gotFlag = false
+                    const val = driver.execute("2137", [])
+                    expect(val).to.eql("Query with id 2137 is not prepared")
+                } catch (error: any) {
+                    console.log("Expected: ", error.expected)
+                    console.log("But got: ", error.actual)
+                    driver.endWebsocket()
+                    return false
+                }
+                return true
+            })
+            .catch((msg: string) => {
+                false
+            }))).to.equal(true)
+            driver.endWebsocket()
+    });
 });
 
