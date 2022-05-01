@@ -22,6 +22,8 @@ export class ASCII implements type {
                 }
                 this.asciiText += String.fromCharCode(pair[1])
            }
+        } else {
+            this.asciiText = data;
         }
     }
 
@@ -41,6 +43,8 @@ export class BIGINT implements type {
     constructor(data: Buffer | string) {
         if (data instanceof Buffer) {
             this.value = data.readBigInt64BE();
+        } else {
+            this.value = BigInt(data);
         }
     }
 
@@ -49,7 +53,7 @@ export class BIGINT implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        return Buffer.from(format(this.value, "hex"), "hex")
     }
 }
 
@@ -61,6 +65,8 @@ export class BLOB implements type {
     constructor(data: Buffer | string) {
         if (data instanceof Buffer) {
             this.#value = BigInt(format(data))
+        } else {
+            this.#value = BigInt(data)
         }
     }
 
@@ -69,7 +75,7 @@ export class BLOB implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        return Buffer.from(format(this.#value, "hex"), "hex")
     }
 }
 
@@ -80,6 +86,8 @@ export class BOOLEAN implements type {
             if (data.length && data[0] > 0) {
                 this.value = true;
             }
+        } else {
+            this.value = data === "true"
         }
     }
 
@@ -94,6 +102,7 @@ export class BOOLEAN implements type {
 
 export class COUNTER implements type {
     constructor(data: Buffer | string) {
+
     }
 
     toString() {
@@ -113,15 +122,19 @@ export class DECIMAL implements type {
         if (data instanceof Buffer) {
             this.scale = BigInt(format(data.slice(0, 4)))
             this.unscaled = BigInt(format(data.slice(4)))
+        } else {
+            let parts = data.split(".")
+            this.scale = BigInt(parts[1].length)
+            this.unscaled = BigInt(parts[0])
         }
     }
 
     toString() {
-        return ""
+        return this.unscaled.toString() + " * 10^" + this.scale.toString()
     }
 
     toCQL() {
-        return Buffer.from("")
+        return Buffer.concat([Buffer.from(format(this.scale, "hex"), "hex"), Buffer.from(format(this.unscaled, "hex"), "hex")])
     }
 }
 
@@ -173,6 +186,8 @@ export class INET implements type {
     constructor(data: Buffer | string) {
         if (data instanceof Buffer) {
             this.address = data
+        } else {
+            this.address = Buffer.from(data)
         }
     }
 
@@ -187,7 +202,7 @@ export class INET implements type {
     }
      
     toCQL() {
-        return Buffer.from("")
+        return this.address
     }
 }
 
@@ -197,6 +212,8 @@ export class INT implements type {
     constructor(data: Buffer | string) {
         if (data instanceof Buffer) {
             this.value = data.readInt32BE(0)
+        } else {
+            this.value = parseInt(data)
         }
     }
 
@@ -206,8 +223,6 @@ export class INT implements type {
 
     toCQL() {
         let buf = Buffer.alloc(4)
-        console.log("val")
-        console.log(this.value)
         buf.writeInt32BE(this.value, 0)
         return buf
     }
@@ -236,7 +251,16 @@ export class LIST implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(4)
+        buf.writeInt32BE(this.list.length, 0)
+        for (let i = 0; i < this.list.length; ++i) {
+            if (this.list[i] != null) {
+                buf = Buffer.concat([buf, this.list[i].toCQL()])
+            }  else {
+                buf = Buffer.concat([buf, Buffer.alloc(4)])
+            }
+        }
+        return buf
     }
 }
 
@@ -282,7 +306,21 @@ export class MAP implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(4)
+        buf.writeInt32BE(this.container.length, 0)
+        for (let i = 0; i < this.container.length; ++i) {
+            if (this.container[i][0] != null) {
+                buf = Buffer.concat([buf, this.container[i][0].toCQL()])
+            } else {
+                buf = Buffer.concat([buf, Buffer.alloc(4)])
+            }
+            if (this.container[i][1] != null) {
+                buf = Buffer.concat([buf, this.container[i][1].toCQL()])
+            } else {
+                buf = Buffer.concat([buf, Buffer.alloc(4)])
+            }
+        }
+        return buf
     }
 }
 
@@ -310,7 +348,16 @@ export class SET implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(4)
+        buf.writeInt32BE(this.list.length, 0)
+        for (let i = 0; i < this.list.length; ++i) {
+            if (this.list[i] != null) {
+                buf = Buffer.concat([buf, this.list[i].toCQL()])
+            } else {
+                buf = Buffer.concat([buf, Buffer.alloc(4)])
+            }
+        }
+        return buf
     }
 }
 
@@ -369,7 +416,11 @@ export class TIME implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeInt32BE(Number(this.#hours), 0)
+        buf.writeInt32BE(Number(this.#minutes), 4)
+        buf.writeInt32BE(Number(this.#seconds), 8)
+        return buf
     }
 }
 
@@ -394,7 +445,9 @@ export class DATE implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(4)
+        buf.writeUInt32BE(this.#days + Math.pow(2, 31), 0)
+        return buf
     }
 }
 
@@ -406,33 +459,25 @@ export class TIMESTAMP implements type {
         if (data instanceof Buffer) {
             this.#miliseconds = data.slice(0, 4).readUInt32BE(0) * Math.pow(2, 32) + data.slice(4, 8).readUInt32BE(0)
             this.#value = new Date(this.#miliseconds)
+        } else {
+            this.#value = new Date(data)
+            this.#miliseconds = this.#value.getTime()
         }
     }
 
     toString() {
         if (isNaN(this.#value.getUTCFullYear())) {
-            return this.#miliseconds.toString()
-        }
-      
-        console.log(this.#value.toString())
-        let result = this.#value.getUTCFullYear()  + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate()
-        + " " + this.#value.getUTCHours() + ":" + this.#value.getUTCMinutes()
-
-        if (this.#value.getUTCSeconds() > 0) {
-            result += ":" + this.#value.getUTCSeconds()
-        }
-        
-        if (this.#value.getUTCMilliseconds() > 0) {
-            result += "." + this.#value.getUTCMilliseconds()
+            return this.#miliseconds.toString() + " miliseconds from 1970-01-01"
         }
 
-        result += "+" + (this.#value.getTimezoneOffset() / -60)
-
-        return result
+        return this.#value.getUTCFullYear() + "-" + (this.#value.getUTCMonth() + 1) + "-" + this.#value.getUTCDate() + " " + this.#value.getUTCHours() + ":" + this.#value.getUTCMinutes() + ":" + this.#value.getUTCSeconds() + "." + this.#value.getUTCMilliseconds()
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(8)
+        buf.writeUInt32BE(Math.floor(this.#miliseconds / Math.pow(2, 32)), 0)
+        buf.writeUInt32BE(this.#miliseconds % Math.pow(2, 32), 4)
+        return buf
     }
 }
 
@@ -487,7 +532,15 @@ export class TUPLE implements type {
     }
 
     toCQL() {
-        return Buffer.from("")
+        let buf = Buffer.alloc(4)
+        buf.writeInt32BE(this.tuple.length, 0)
+        for (let i = 0; i < this.tuple.length; ++i) {
+            const tupleValue = this.tuple[i]
+            if (tupleValue != null) {
+                buf = Buffer.concat([buf, tupleValue.toCQL()])
+            }
+        }
+        return buf
     }
 }
 
@@ -527,5 +580,25 @@ export class VARCHAR implements type {
 
     toCQL() {
         return Buffer.from(this.#value, "utf-8")
+    }
+}
+
+export class VARINT implements type {
+    #value : number = 0
+
+    constructor(data: Buffer | string) {
+        if (data instanceof Buffer) {
+            this.#value = data.readInt32BE()
+        }
+    }
+
+    toString() {
+        return this.#value.toString()
+    }
+
+    toCQL() {
+        let buf = Buffer.alloc(4)
+        buf.writeInt32BE(this.#value, 0)
+        return buf
     }
 }
