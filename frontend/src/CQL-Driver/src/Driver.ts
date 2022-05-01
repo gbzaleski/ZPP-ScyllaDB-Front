@@ -134,6 +134,10 @@ class CQLDriver {
         return this.#websocket.readyState == WWebSocket.OPEN
     }
 
+    endWebsocket = () => {
+        this.#websocket.close()
+    }
+
     query = (body : string, pagingState? : Bytes) : void => {
         this.#expectedIndex = 0
         this.clearPagingStates()
@@ -142,29 +146,30 @@ class CQLDriver {
         this.#websocket.send(getQueryMessage(this, body, this.#setLastQuery, pagingState));
     }
 
-    prepare = (body : string) : Buffer => {
-        return getPrepareMessage(body)
+    prepare = (body : string) : void => {
+        this.#websocket.send(getPrepareMessage(body))
     }
 
-    execute = (body : string, bindValues : Array<string>) : Buffer | null => {
+    execute = (body : string, bindValues : Array<string>) : void => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "EXECUTE"
         this.#bindValues = bindValues
-        console.log(BigInt(body))
         const result = this.#preparedStatements.get(BigInt(body))
 
         if (result == undefined) {
-            return null
+            return;
         }
-        console.log(result)
-        return getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues, result);
+       
+        this.#websocket.send(getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues, result));
     }
 
-    getNextPageQuery = () : Buffer | null => {
-        console.log(this.#pagingStates)
+    getNextPageQuery = () : void => {
         const wantedIndex = this.#pagingIndex + 1
-        return this.#getQueryPageAt(wantedIndex)
+        const queryPage = this.#getQueryPageAt(wantedIndex)
+        if (queryPage != null) {
+            this.#websocket.send(queryPage)
+        }
     }
 
     getNumberOfLoadedPages = () : number => {
@@ -185,9 +190,12 @@ class CQLDriver {
         return false
     }
 
-    getPreviousPageQuery = () : Buffer | null => {
+    getPreviousPageQuery = () : void => {
         const wantedIndex = this.#pagingIndex - 1
-        return this.#getQueryPageAt(wantedIndex)
+        const queryPage = this.#getQueryPageAt(wantedIndex)
+        if (queryPage != null) {
+            this.#websocket.send(queryPage)
+        }
     }
 
     #getQueryPageAt = (index: number) : Buffer | null => {

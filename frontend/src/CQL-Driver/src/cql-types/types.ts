@@ -205,7 +205,9 @@ export class INT implements type {
     }
 
     toCQL() {
-        let buf = Buffer.alloc(8)
+        let buf = Buffer.alloc(4)
+        console.log("val")
+        console.log(this.value)
         buf.writeInt32BE(this.value, 0)
         return buf
     }
@@ -525,15 +527,5 @@ export class VARCHAR implements type {
 
     toCQL() {
         return Buffer.from(this.#value, "utf-8")
-    }
-}
-
-export class VARINT implements type {
-    toString() {
-        return ""
-    }
-
-    toCQL() {
-        return Buffer.from("")
     }
 }
