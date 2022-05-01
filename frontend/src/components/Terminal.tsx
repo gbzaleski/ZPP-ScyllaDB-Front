@@ -28,6 +28,8 @@ const Terminal = () => {
     const [password, setPassword] = useState<string>("");
     const [isFormPassed, setFormPassed] = useState(false);
 
+    const [reauthorisationMode, setReauthorisationMode] = useState(false);
+
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
             event.target.value.slice(1) : event.target.value);
@@ -63,6 +65,15 @@ const Terminal = () => {
 
         // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
         console.log("Passed: ", login, password, adress, port)
+
+        if (true) // driver.needsReathrisation()
+            setReauthorisationMode(true);
+    }
+
+    const authorise = () => {
+        // jakies driver.reathorise(login, password)
+
+        setReauthorisationMode(false);
     }
 
     // Retrieving previously used commands from the localStorage
@@ -250,7 +261,7 @@ const Terminal = () => {
 
     return (
         <div className={classes.terminalContainer}>
-            {!isFormPassed && <LaunchForm 
+            {(!isFormPassed || reauthorisationMode) && <LaunchForm 
                  adress={adress}
                  setAddress={setAddress}
                  port={port}
@@ -261,6 +272,9 @@ const Terminal = () => {
                  setPassword={setPassword}
                  setFormPassed={setFormPassed}
                  connectUser={connectUser}
+
+                 reauthorisationMode={reauthorisationMode}
+                 authorise={authorise}
             />}
             <img 
                 src={logo} 

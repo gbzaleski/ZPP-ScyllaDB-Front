@@ -13,11 +13,15 @@ interface LaunchFormProps {
     setPassword : (s : string) => void;
     setFormPassed : (b : boolean) => void;
     connectUser : () => void;
+
+    reauthorisationMode : boolean;
+    authorise : () => void;
 }
 
-function LaunchForm({adress, setAddress, port, setPort, login, setLogin, password, setPassword, setFormPassed, connectUser} : LaunchFormProps)
+function LaunchForm({adress, setAddress, port, setPort, login, setLogin, password, setPassword, setFormPassed, connectUser, reauthorisationMode, authorise} : LaunchFormProps)
 {
     const classes = useStyles();
+    const [errorMsg, setErrorMsg] = useState<string>("");
 
     const changeAddress =  (event : React.ChangeEvent<HTMLInputElement>) => {
         setAddress(event.target.value.length && event.target.value[0].trim() === '' ? 
@@ -52,29 +56,52 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
         setFormPassed(true);
     }
 
-    return <div className={classes.blurredBackground}>
-        <form className={classes.content} onSubmit={submitForm} >
-            <div className={classes.element}>
-                <div>Address:</div>
-                <input
-                    defaultValue=""
-                    value={adress}
-                    onChange={changeAddress}
-                    placeholder={DEFUALT_ADDRESS}
-                    className={classes.styledInput}
-                />
-            </div>
+    const submitReauthorisation = (e : any) => {
+        e.preventDefault();
 
-            <div className={classes.element}>
-                <div>Port:</div>
-                <input
-                    defaultValue=""
-                    value={port}
-                    onChange={changePort}
-                    placeholder={DEFAULT_PORT}
-                    className={classes.styledInput}
-                />
+        if (login === "")
+        {
+            setErrorMsg("Username is required!")
+            return;
+        }
+        
+        if (password == "")
+        {
+            setErrorMsg("Password is required!")
+            return;
+        }
+
+        authorise();
+    }
+
+    return <div className={classes.blurredBackground}>
+        <form className={classes.content} onSubmit={reauthorisationMode ? submitReauthorisation : submitForm} >
+
+            {reauthorisationMode ? "" :
+                <div className={classes.element}>
+                    <div>Address:</div>
+                    <input
+                        defaultValue=""
+                        value={adress}
+                        onChange={changeAddress}
+                        placeholder={DEFUALT_ADDRESS}
+                        className={classes.styledInput}
+                    />
             </div>
+            }
+
+            {reauthorisationMode ? "" :
+                <div className={classes.element}>
+                    <div>Port:</div>
+                    <input
+                        defaultValue=""
+                        value={port}
+                        onChange={changePort}
+                        placeholder={DEFAULT_PORT}
+                        className={classes.styledInput}
+                    />
+                </div>
+            }
 
             <div className={classes.element}>
                 <div>Username:</div>
@@ -96,9 +123,10 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
                     className={classes.styledInput}
                 />
             </div>
-
+            
+            {errorMsg && <div className={classes.errorDisplayer}>{errorMsg}</div>}
             <button className={classes.launchPadButton}>
-                Connect
+                {reauthorisationMode ? "Authorise" : "Connect"}
             </button>
         </form>
     </div>
@@ -140,6 +168,11 @@ const useStyles = makeStyles(theme => ({
     launchPadButton: {
         fontSize: "100%",
         marginTop: "10px",
+    },
+
+    errorDisplayer: {
+        fontSize: "80%",
+        color: "#ed4337",
     }
 }));
 
