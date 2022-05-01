@@ -17,7 +17,7 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
 
     useEffect(() => {
         // Create WebSocket connection.
-        websocket.current = new WebSocket('ws://localhost:9000', "cql");
+        websocket.current = new WebSocket('ws://localhost:8222', "cql");
     }, []);
 
     const errorResponse = (message : string, errorType : string) => 

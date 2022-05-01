@@ -35,23 +35,11 @@ function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
     }
 
     const onBack = () => {
-        const previousPageQuery = driver.getPreviousPageQuery();
-
-        if (previousPageQuery != null) {
-            sendMsg(previousPageQuery);
-            setPageCount(page - 1);
-            setDisable();
-        }
+       driver.getPreviousPageQuery();
     }
     
     const onNext = () => {        
-        const nextPageQuery = driver.getNextPageQuery();
-
-        if (nextPageQuery != null) {
-            sendMsg(nextPageQuery);
-            setPageCount(page + 1);
-            setDisable();
-        }
+        driver.getNextPageQuery();
     }
 
     return (

@@ -52,7 +52,7 @@ const Terminal = () => {
     }
 
     const sendConnect = (driver : CQLDriver, username : string, password : string) => {
-        driver.connect(webSocket, setServerResponse, setTableResponse, username, password);
+        driver.connect(setServerResponse, setTableResponse, username, password);
     }
 
     const connectUser = () => {
@@ -161,7 +161,7 @@ const Terminal = () => {
 
 
                         // Tu jakis odbiór
-                        sendMsg(driver.prepare(prepareArg))
+                        driver.prepare(prepareArg)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setServerResponse(["",""])
@@ -176,10 +176,8 @@ const Terminal = () => {
                        
 
                         // Tu jakis odbiór
-                        const executeQuery = driver.execute(executeArgs[0], executeArgs.slice(1))
-                        if (executeQuery != null) {
-                            sendMsg(executeQuery)
-                        }
+                        driver.execute(executeArgs[0], executeArgs.slice(1))
+                        
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setServerResponse(["", ""])
@@ -205,7 +203,7 @@ const Terminal = () => {
                             break;
 
                         setServerResponse(["", ""])
-                        sendMsg(driver.query(command));
+                        driver.query(command);
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setTableResponse([]);

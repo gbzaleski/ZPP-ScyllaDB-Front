@@ -8,8 +8,13 @@ import getPrepareMessage from "./utils/getPrepareMessage";
 import getExecuteMessage from "./utils/getExecuteMessage";
 import getAuthenticationMessage from "./utils/getAuthenticationMessage";
 import getLength from "./utils/getLength";
+import {Blob} from 'buffer'
+import {isBrowser} from "browser-or-node"
+import { WebSocket as WWebSocket} from "ws";
+
 
 class CQLDriver {
+    #websocket : any
     #consistency: Consistency
     #keyspace : string
     #pageSize: number
@@ -27,6 +32,9 @@ class CQLDriver {
 
     constructor() {
         console.log("creating object")
+        this.#websocket = isBrowser ? new WebSocket("ws://localhost:8222")
+        : this.#websocket = new WWebSocket('ws://localhost:8222')
+        console.log(this.#websocket)
         this.#consistency = getConsistency("ONE");
         this.#keyspace = ""
         this.#pageSize = 6
@@ -46,7 +54,9 @@ class CQLDriver {
 
     handshake = handshakeMessage.bind(this)
 
-    authenticate = getAuthenticationMessage.bind(this)
+    authenticate = (login : string, passwd : string) => {
+        this.#websocket.send(getAuthenticationMessage(login, passwd))
+    } 
 
     #addPreparedStatement = (id: bigint, values: Array<Option>) : void => {
         this.#preparedStatements.set(id, values)
@@ -75,27 +85,37 @@ class CQLDriver {
         }
     }
 
-    connect = (websocket : any, setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
+    connect = (setResponse : any, setTableResponse : any, user: string, passwd : string) : boolean => {
         let driver = this
-        websocket.current.addEventListener('open', function (event : any) {
+        let ws = this.#websocket
+
+        ws.addEventListener('open', function (event : any) {
             console.log('Connected to the WS Server!')
         });
-
         // Connection closed
-        websocket.current.addEventListener('close', function (event: any) {
+        ws.addEventListener('close', function (event: any) {
             console.log('Disconnected from the WS Server!')
         });
 
         // Listen for messages
-        
-        websocket.current.addEventListener('message', function (event: any) {
-            event.data.arrayBuffer().then((response: any) => {
+        const coder = new TextEncoder()
+
+        ws.addEventListener('message', function (event: any) {
+          
+            let received = event.data
+            if (Buffer.isBuffer(event.data)) {
+                received = new Blob([event.data]) 
+            }
+
+            //event.data=new Blob(event.data)
+            received.arrayBuffer().then((response: any) => {
                 response = driver.getResponse(Buffer.from(response))
+                console.log(response)
                 if (typeof response[0] == "string") {
                     if (response[1] == "READY" || response[1] == "AUTH_SUCCESS") {
                         setResponse([response[0], ""])
                     } else if (response[1] == "AUTHENTICATE") {
-                        websocket.current.send(coder.encode(driver.authenticate(user, passwd).toString()))                    
+                        driver.authenticate(user, passwd)                   
                     } else {
                         setResponse(response)
                     }
@@ -105,43 +125,51 @@ class CQLDriver {
             })
         });
 
-        const coder = new TextEncoder()
-        websocket.current.send(coder.encode(driver.handshake()));
+        
+        ws.send(coder.encode(driver.handshake()));
 
         return true;
     }
 
-    query = (body : string, pagingState? : Bytes) : Buffer => {
+    isReady = () => {
+        return this.#websocket.readyState == WWebSocket.OPEN
+    }
+
+    endWebsocket = () => {
+        this.#websocket.close()
+    }
+
+    query = (body : string, pagingState? : Bytes) : void => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "QUERY"
         this.#bindValues = []
-        return getQueryMessage(this, body, this.#setLastQuery, pagingState);
+        this.#websocket.send(getQueryMessage(this, body, this.#setLastQuery, pagingState));
     }
 
-    prepare = (body : string) : Buffer => {
-        return getPrepareMessage(body)
+    prepare = (body : string) : void => {
+        this.#websocket.send(getPrepareMessage(body))
     }
 
-    execute = (body : string, bindValues : Array<string>) : Buffer | null => {
+    execute = (body : string, bindValues : Array<string>) : void | string => {
         this.#expectedIndex = 0
         this.clearPagingStates()
         this.#lastQueryType = "EXECUTE"
         this.#bindValues = bindValues
-        console.log(BigInt(body))
         const result = this.#preparedStatements.get(BigInt(body))
-
         if (result == undefined) {
-            return null
+            return "Query with id " + body + " is not prepared";
         }
-        console.log(result)
-        return getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues, result);
+       
+        this.#websocket.send(getExecuteMessage(this, body, this.#setLastQuery, this.#bindValues, result));
     }
 
-    getNextPageQuery = () : Buffer | null => {
-        console.log(this.#pagingStates)
+    getNextPageQuery = () : void => {
         const wantedIndex = this.#pagingIndex + 1
-        return this.#getQueryPageAt(wantedIndex)
+        const queryPage = this.#getQueryPageAt(wantedIndex)
+        if (queryPage != null) {
+            this.#websocket.send(queryPage)
+        }
     }
 
     getNumberOfLoadedPages = () : number => {
@@ -162,9 +190,12 @@ class CQLDriver {
         return false
     }
 
-    getPreviousPageQuery = () : Buffer | null => {
+    getPreviousPageQuery = () : void => {
         const wantedIndex = this.#pagingIndex - 1
-        return this.#getQueryPageAt(wantedIndex)
+        const queryPage = this.#getQueryPageAt(wantedIndex)
+        if (queryPage != null) {
+            this.#websocket.send(queryPage)
+        }
     }
 
     #getQueryPageAt = (index: number) : Buffer | null => {
