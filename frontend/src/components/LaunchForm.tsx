@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {makeStyles} from "@material-ui/core/styles";
 import {DEFUALT_ADDRESS, DEFAULT_PORT} from "../consts"
+import { Oval } from 'react-loading-icons'
 
 interface LaunchFormProps {
     adress : string;
@@ -16,12 +17,15 @@ interface LaunchFormProps {
 
     reauthorisationMode : boolean;
     authorise : () => void;
+    loadingMode : boolean;
+    errorMsg : string;
+    setErrorMsg : (s : string) => void;
 }
 
-function LaunchForm({adress, setAddress, port, setPort, login, setLogin, password, setPassword, setFormPassed, connectUser, reauthorisationMode, authorise} : LaunchFormProps)
+function LaunchForm({adress, setAddress, port, setPort, login, setLogin, password, setPassword, setFormPassed, connectUser, 
+    reauthorisationMode, authorise, loadingMode, errorMsg, setErrorMsg} : LaunchFormProps)
 {
     const classes = useStyles();
-    const [errorMsg, setErrorMsg] = useState<string>("");
 
     const changeAddress =  (event : React.ChangeEvent<HTMLInputElement>) => {
         setAddress(event.target.value.length && event.target.value[0].trim() === '' ? 
@@ -75,60 +79,73 @@ function LaunchForm({adress, setAddress, port, setPort, login, setLogin, passwor
     }
 
     return <div className={classes.blurredBackground}>
-        <form className={classes.content} onSubmit={reauthorisationMode ? submitReauthorisation : submitForm} >
-
-            {reauthorisationMode ? "" :
-                <div className={classes.element}>
-                    <div>Address:</div>
-                    <input
-                        defaultValue=""
-                        value={adress}
-                        onChange={changeAddress}
-                        placeholder={DEFUALT_ADDRESS}
-                        className={classes.styledInput}
-                    />
+        {
+        loadingMode ? 
+            <div className={classes.content}>
+                <Oval
+                    speed={.85}
+                    strokeWidth={5}
+                    height={"100px"}
+                    width={"60px"}
+                />
+                Connecting…
             </div>
-            }
+        :
+            <form className={classes.content} onSubmit={reauthorisationMode ? submitReauthorisation : submitForm} >
 
-            {reauthorisationMode ? "" :
+                {reauthorisationMode ? "" :
+                    <div className={classes.element}>
+                        <div>Address:</div>
+                        <input
+                            defaultValue=""
+                            value={adress}
+                            onChange={changeAddress}
+                            placeholder={DEFUALT_ADDRESS}
+                            className={classes.styledInput}
+                        />
+                </div>
+                }
+
+                {reauthorisationMode ? "" :
+                    <div className={classes.element}>
+                        <div>Port:</div>
+                        <input
+                            defaultValue=""
+                            value={port}
+                            onChange={changePort}
+                            placeholder={DEFAULT_PORT}
+                            className={classes.styledInput}
+                        />
+                    </div>
+                }
+
                 <div className={classes.element}>
-                    <div>Port:</div>
+                    <div>Username:</div>
                     <input
                         defaultValue=""
-                        value={port}
-                        onChange={changePort}
-                        placeholder={DEFAULT_PORT}
+                        value={login}
+                        onChange={changeLogin}
                         className={classes.styledInput}
                     />
                 </div>
-            }
 
-            <div className={classes.element}>
-                <div>Username:</div>
-                <input
-                    defaultValue=""
-                    value={login}
-                    onChange={changeLogin}
-                    className={classes.styledInput}
-                />
-            </div>
-
-            <div className={classes.element}>
-                <div>Password:</div>
-                <input
-                    defaultValue=""
-                    value={password}
-                    onChange={changePassword}
-                    type="password"
-                    className={classes.styledInput}
-                />
-            </div>
-            
-            {errorMsg && <div className={classes.errorDisplayer}>{errorMsg}</div>}
-            <button className={classes.launchPadButton}>
-                {reauthorisationMode ? "Authorise" : "Connect"}
-            </button>
-        </form>
+                <div className={classes.element}>
+                    <div>Password:</div>
+                    <input
+                        defaultValue=""
+                        value={password}
+                        onChange={changePassword}
+                        type="password"
+                        className={classes.styledInput}
+                    />
+                </div>
+                
+                {errorMsg && <div className={classes.errorDisplayer}>{errorMsg}</div>}
+                <button className={classes.launchPadButton}>
+                    {reauthorisationMode ? "Authorise" : "Connect"}
+                </button>
+            </form>
+        }
     </div>
 }
 

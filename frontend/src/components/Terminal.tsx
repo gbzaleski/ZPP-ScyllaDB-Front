@@ -29,6 +29,8 @@ const Terminal = () => {
     const [isFormPassed, setFormPassed] = useState(false);
 
     const [reauthorisationMode, setReauthorisationMode] = useState(false);
+    const [loadingMode, setLoadingMode] = useState(false);
+    const [panelErrorMsg, setPanelErrorMsg] = useState<string>("");
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
@@ -68,12 +70,28 @@ const Terminal = () => {
 
         if (true) // driver.needsReathrisation()
             setReauthorisationMode(true);
+            setPanelErrorMsg("Authorisation required!");
     }
 
     const authorise = () => {
+        
+        setLoadingMode(true);
         // jakies driver.reathorise(login, password)
 
-        setReauthorisationMode(false);
+
+        /* if (driver.authorisedCosTamSuccess())
+        {
+            const errorDisplay = driver.getErrorInfo();
+            setLoadingMode(false);
+            setReauthorisationMode(true);
+            setPanelErrorMsg("Wrong credentials");
+        }
+        else
+        {
+            setLoadingMode(false);
+            setReauthorisationMode(false);
+        }
+        */
     }
 
     // Retrieving previously used commands from the localStorage
@@ -275,6 +293,9 @@ const Terminal = () => {
 
                  reauthorisationMode={reauthorisationMode}
                  authorise={authorise}
+                 loadingMode={loadingMode}
+                 errorMsg={panelErrorMsg}
+                 setErrorMsg={setPanelErrorMsg}
             />}
             <img 
                 src={logo} 
