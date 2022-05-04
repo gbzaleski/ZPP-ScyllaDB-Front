@@ -64,18 +64,26 @@ const Terminal = () => {
         sendConnect(driver, login, password);
         clearInput();
         setTableResponse([]);
+        setLoadingMode(true)
 
         // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
         console.log("Passed: ", login, password, adress, port)
 
+        // Odbiór danych
+        // const infoCon = driver.isConnected();
+
+        setLoadingMode(false);
+
         if (true) // driver.needsReathrisation()
             setReauthorisationMode(true);
-            setPanelErrorMsg("Authorisation required!");
+            setPanelErrorMsg("Authorisation failed");
     }
 
     const authorise = () => {
         
         setLoadingMode(true);
+
+
         // jakies driver.reathorise(login, password)
 
 
@@ -84,7 +92,7 @@ const Terminal = () => {
             const errorDisplay = driver.getErrorInfo();
             setLoadingMode(false);
             setReauthorisationMode(true);
-            setPanelErrorMsg("Wrong credentials");
+            setPanelErrorMsg("Authorisation failed: " + errorDisplay);
         }
         else
         {
@@ -279,7 +287,7 @@ const Terminal = () => {
 
     return (
         <div className={classes.terminalContainer}>
-            {(!isFormPassed || reauthorisationMode) && <LaunchForm 
+            {(!isFormPassed || reauthorisationMode || loadingMode) && <LaunchForm 
                  adress={adress}
                  setAddress={setAddress}
                  port={port}
