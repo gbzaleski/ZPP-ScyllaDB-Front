@@ -15,6 +15,7 @@ const Terminal = () => {
     const [serverResponse, setServerResponse] = useState<[string, string]>(["", ""]);
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
+    console.log("Response: ", serverResponse, tableResponse)
 
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -59,34 +60,38 @@ const Terminal = () => {
         driver.connect(webSocket, setServerResponse, setTableResponse, username, password);
     }
 
-    const connectUser = () => {
+    function sleep(ms : number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    const connectUser = async () => {
         setServerResponse(["", ""])
-        sendConnect(driver, login, password);
         clearInput();
         setTableResponse([]);
-        setLoadingMode(true)
+        setLoadingMode(true);
+        sendConnect(driver, login, password);
+        await sleep(1500);
 
-        // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
-        console.log("Passed: ", login, password, adress, port)
-
-        // Odbiór danych
-        // const infoCon = driver.isConnected();
-
+        
         setLoadingMode(false);
 
+        // Dodac analize z setReponse zamiast tego
         if (true) // driver.needsReathrisation()
             setReauthorisationMode(true);
             setPanelErrorMsg("Authorisation failed");
     }
 
-    const authorise = () => {
+    const authorise = async () => {
         
         setLoadingMode(true);
+        await sleep(1500);
+
+        driver.authenticate(login, password);
+        setLoadingMode(false);
 
 
         // jakies driver.reathorise(login, password)
-
-
+        // to wywalic i dodac analize z setReponse
         /* if (driver.authorisedCosTamSuccess())
         {
             const errorDisplay = driver.getErrorInfo();
