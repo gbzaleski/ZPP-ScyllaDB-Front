@@ -22,7 +22,6 @@ const getVoidResult = () : [string, string] => {
 
 const getRowsResult = (driver : CQLDriver, buf : Buffer) : [string  | Array<Array<string>>, ""] => {
     
-    console.log("response", buf)
     let stringLen = 0
     let globalTableSpecPresent = false
     let hasMorePages = false
@@ -82,7 +81,6 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : [string  | Array<Arra
         let columnType = bufferToOption(buf.slice(stringLen))
     
         columnVars[i] = {name: columnName, type: columnType}
-        //console.log(columnType)
         stringLen += columnType.size + 2
     }
     
@@ -114,9 +112,7 @@ const getRowsResult = (driver : CQLDriver, buf : Buffer) : [string  | Array<Arra
     for (let i = 1; i <= rowCount; ++i) {
         content[i] = Array.from({length: columnCount})
         for (let j = 0; j < columnCount; ++j) {
-            //console.log(format(columnVars[j].type.id.short))
             if (rows[i - 1][j] != null) {
-            //console.log()
                 const receivedType = getTypeFrom(columnVars[j].type, rows[i - 1][j].bytes)
                 if (receivedType != null) {
                     content[i][j] = receivedType.toString()
@@ -150,7 +146,6 @@ const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : [string, 
     if (metaDataFlags & 1) {
         globalTableSpecPresent = true
     }
-    console.log(globalTableSpecPresent)
     
     buf = buf.slice(4)
     
@@ -158,7 +153,6 @@ const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : [string, 
     buf = buf.slice(4)
     const pkCount = Number(format(bufferToInt(buf).int))
     buf = buf.slice(4)
-    console.log(pkCount)
     
     for (let i = 0; i < pkCount; ++i) {
         const pkIndex = Number(format(bufferToShort(buf).short))
@@ -173,26 +167,20 @@ const getPreparedResult = (buf : Buffer, addPreparedStatement : any) : [string, 
         tableName = bufferToString(buf)
         buf = buf.slice(tableName.string.length + 2)
     }
-    console.log(columnCount)
     for (let i = 0; i < columnCount; ++i) {
         if (!globalTableSpecPresent) {
             keySpaceName = bufferToString(buf)
-            console.log(keySpaceName)
             buf.slice(Number(format(keySpaceName.length.short)) + 2)
             tableName = bufferToString(buf)
-            console.log(tableName)
             buf.slice(Number(format(tableName.length.short)) + 2)
         }
         
         let columnName = bufferToString(buf)
-        console.log(columnName)
         buf = buf.slice(Number(format(columnName.length.short)) + 2)
         let columnType = bufferToOption(buf)
         columnValues[i] = columnType
-        console.log(columnType)
         buf = buf.slice(columnType.size + 2)
     }
-    console.log(columnValues)
     addPreparedStatement(id, columnValues)
 
     return ["Prepared statement with id " + id.toString(), ""]
@@ -229,10 +217,7 @@ const getSchemaChangeResult = (buf : Buffer) : [string, string] => {
 }
 
 const getQueryResult = (driver : any, buffer: Buffer, setKeyspace: any, addPreparedStatement : any) : [string | Array<Array<string>>, string] => {
-
-    //console.log(buffer)
     const length = getLength(buffer)
-    //console.log(length)
     const body = buffer.slice(9, 9 + Number(length));
     if (body.length >= length) {
         driver.setLastBody(Buffer.from(""))

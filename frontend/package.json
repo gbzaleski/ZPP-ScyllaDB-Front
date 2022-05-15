@@ -4,15 +4,16 @@
   "requires": true,
   "packages": {},
   "dependencies": {
-    "@material-ui/core": "^4.11.3",
-    "@types/react": "^17.0.38",
-    "@types/react-dom": "^17.0.11",
+    "@material-ui/core": "^4.12.4",
+    "@types/react": "^17.0.44",
+    "@types/react-dom": "^17.0.16",
     "biguint-format": "^1.0.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-loading-icons": "^1.0.8",
     "react-scripts": "4.0.3",
-    "typescript": "^4.5.4",
+    "varint": "^6.0.0",
+    "typescript": "^4.6.4",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
@@ -33,11 +34,20 @@
       "last 1 safari version"
     ],
     "exclude": [
-      "./tests/",
       "./node_modules/"
     ]
   },
   "devDependencies": {
-    "@types/uuid": "^8.3.4"
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
+    "browser-or-node": "^2.0.0",
+    "chai": "^4.3.6",
+    "mocha": "^9.2.2",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.5.4",
+    "typings": "^2.1.1",
+    "ws": "^8.5.0"
   }
 }

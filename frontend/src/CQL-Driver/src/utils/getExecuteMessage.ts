@@ -7,7 +7,6 @@ import {bigIntToBuffer, numberToByte, numberToInt, numberToShort, tokensToValues
 import addExecuteBody from "./addExecuteBody";
 import { CQLDriver } from "../Driver";
 import { Bytes, Option } from "./types";
-const format = require("biguint-format");
 
 const ValuesFlag : bigint = 1n
 const PageSizeFlagValue : bigint = 4n

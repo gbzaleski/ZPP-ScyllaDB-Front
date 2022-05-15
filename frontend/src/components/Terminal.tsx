@@ -23,8 +23,8 @@ const Terminal = () => {
     const [driver, setDriver] = useState(new CQLDriver());
     const classes = useStyles();
 
-    const [adress, setAddress] = useState<string>("");
-    const [port, setPort] = useState<string>("");
+    const [adress, setAddress] = useState<string>("localhost");
+    const [port, setPort] = useState<string>("8222");
     const [login, setLogin] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [isFormPassed, setFormPassed] = useState(false);
@@ -57,7 +57,7 @@ const Terminal = () => {
     }
 
     const sendConnect = (driver : CQLDriver, username : string, password : string) => {
-        driver.connect(webSocket, setServerResponse, setTableResponse, username, password);
+        driver.connect(setServerResponse, setTableResponse, username, password);
     }
 
     function sleep(ms : number) {
@@ -66,6 +66,7 @@ const Terminal = () => {
 
     const connectUser = async () => {
         setServerResponse(["", ""])
+<<<<<<< HEAD
         clearInput();
         setTableResponse([]);
         setLoadingMode(true);
@@ -105,6 +106,19 @@ const Terminal = () => {
             setReauthorisationMode(false);
         }
         */
+=======
+        driver.recreate(adress, port).then(() => {
+            sendConnect(driver, login, password);
+            clearInput();
+            setTableResponse([]);
+
+            // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
+            console.log("Passed: ", login, password, adress, port)
+        })
+        .catch((e) => {
+            console.log("Could not connect")
+        })
+>>>>>>> main
     }
 
     // Retrieving previously used commands from the localStorage
@@ -203,7 +217,7 @@ const Terminal = () => {
 
 
                         // Tu jakis odbiór
-                        sendMsg(driver.prepare(prepareArg))
+                        driver.prepare(prepareArg)
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setServerResponse(["",""])
@@ -218,10 +232,8 @@ const Terminal = () => {
                        
 
                         // Tu jakis odbiór
-                        const executeQuery = driver.execute(executeArgs[0], executeArgs.slice(1))
-                        if (executeQuery != null) {
-                            sendMsg(executeQuery)
-                        }
+                        driver.execute(executeArgs[0], executeArgs.slice(1))
+                        
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setServerResponse(["", ""])
@@ -247,7 +259,7 @@ const Terminal = () => {
                             break;
 
                         setServerResponse(["", ""])
-                        sendMsg(driver.query(command));
+                        driver.query(command);
                         setCommandHistory((prevState: Array<string>) => [...prevState, command]);
                         clearInput();
                         setTableResponse([]);

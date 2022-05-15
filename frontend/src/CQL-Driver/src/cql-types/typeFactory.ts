@@ -1,4 +1,4 @@
-import {ASCII, BIGINT, BLOB, BOOLEAN, COUNTER, DECIMAL, DOUBLE, FLOAT,
+import {ASCII, BIGINT, BLOB, BOOLEAN, DECIMAL, DOUBLE, FLOAT,
         SET, INT, type, LIST, MAP, VARCHAR, UUID, TUPLE, INET, TIME, DATE, SMALLINT, TINYINT, TIMESTAMP} from "./types";
 const format = require("biguint-format");
 
@@ -17,9 +17,6 @@ export const getTypeFrom = (type: any, data: Buffer | string) : type | null =>  
         }
         case 4: {
             return new BOOLEAN(data)
-        }
-        case 5: {
-            return new COUNTER(data)
         }
         case 6: {
             return new DECIMAL(data)
