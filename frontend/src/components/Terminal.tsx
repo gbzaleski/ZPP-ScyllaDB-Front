@@ -13,6 +13,20 @@ const Terminal = () => {
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
     const [serverResponse, setServerResponse] = useState<[string, string]>(["", ""]);
+
+    const wrappedSetServerReponse = (elem : any) => {
+        setServerResponse(elem);
+
+        setLoadingMode(false);
+        setReauthorisationMode(false);
+        console.log("TEST: ", elem);
+        if (elem[1] === "AUTHENTICATE")
+        {
+            setPanelErrorMsg("Authorisation failed!");
+            authorise();
+        }
+    }
+
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
     console.log("Response: ", serverResponse, tableResponse)
@@ -57,7 +71,7 @@ const Terminal = () => {
     }
 
     const sendConnect = (driver : CQLDriver, username : string, password : string) => {
-        driver.connect(setServerResponse, setTableResponse, username, password);
+        driver.connect(wrappedSetServerReponse, setTableResponse, username, password);
     }
 
     function sleep(ms : number) {
@@ -65,52 +79,15 @@ const Terminal = () => {
     }
 
     const connectUser = async () => {
-        setServerResponse(["", ""])
-<<<<<<< HEAD
-        clearInput();
-        setTableResponse([]);
-        setLoadingMode(true);
-        sendConnect(driver, login, password);
-        await sleep(1500);
-
-        
-        setLoadingMode(false);
-
-        // Dodac analize z setReponse zamiast tego
-        if (true) // driver.needsReathrisation()
-            setReauthorisationMode(true);
-            setPanelErrorMsg("Authorisation failed");
-    }
-
-    const authorise = async () => {
         
         setLoadingMode(true);
-        await sleep(1500);
-
-        driver.authenticate(login, password);
-        setLoadingMode(false);
-
-
-        // jakies driver.reathorise(login, password)
-        // to wywalic i dodac analize z setReponse
-        /* if (driver.authorisedCosTamSuccess())
-        {
-            const errorDisplay = driver.getErrorInfo();
-            setLoadingMode(false);
-            setReauthorisationMode(true);
-            setPanelErrorMsg("Authorisation failed: " + errorDisplay);
-        }
-        else
-        {
-            setLoadingMode(false);
-            setReauthorisationMode(false);
-        }
-        */
-=======
-        driver.recreate(adress, port).then(() => {
+        
+        driver.recreate(adress, port).then(async () => {
             sendConnect(driver, login, password);
+            setServerResponse(["", ""])
             clearInput();
             setTableResponse([]);
+            await sleep(1500);
 
             // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
             console.log("Passed: ", login, password, adress, port)
@@ -118,7 +95,24 @@ const Terminal = () => {
         .catch((e) => {
             console.log("Could not connect")
         })
->>>>>>> main
+
+        
+
+        /* // Dodac analize z setReponse zamiast tego
+        if (true) // driver.needsReathrisation()
+            setReauthorisationMode(true);
+            setPanelErrorMsg("Authorisation failed");
+            */
+    }
+
+    const authorise = async () => {
+        
+        setReauthorisationMode(true);
+        setLoadingMode(true);
+        await sleep(1500);
+
+        driver.authenticate(login, password);
+        setLoadingMode(false);
     }
 
     // Retrieving previously used commands from the localStorage
