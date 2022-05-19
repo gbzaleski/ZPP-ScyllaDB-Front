@@ -20,10 +20,10 @@ const Terminal = () => {
         setLoadingMode(false);
         setReauthorisationMode(false);
         console.log("TEST: ", elem);
-        if (elem[1] === "AUTHENTICATE")
+        if (elem[1] === "Authentication Error")
         {
             setPanelErrorMsg("Authorisation failed!");
-            authorise();
+            setReauthorisationMode(true);
         }
     }
 
@@ -93,16 +93,11 @@ const Terminal = () => {
             console.log("Passed: ", login, password, adress, port)
         })
         .catch((e) => {
+            console.log(driver);
+            console.log(e)
             console.log("Could not connect")
         })
 
-        
-
-        /* // Dodac analize z setReponse zamiast tego
-        if (true) // driver.needsReathrisation()
-            setReauthorisationMode(true);
-            setPanelErrorMsg("Authorisation failed");
-            */
     }
 
     const authorise = async () => {
