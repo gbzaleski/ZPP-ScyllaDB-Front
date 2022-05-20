@@ -19,7 +19,6 @@ const Terminal = () => {
 
         setLoadingMode(false);
         setReauthorisationMode(false);
-        console.log("TEST: ", elem);
         if (elem[1] === "Authentication Error")
         {
             setPanelErrorMsg("Authorisation failed!");
@@ -29,7 +28,6 @@ const Terminal = () => {
 
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
-    console.log("Response: ", serverResponse, tableResponse)
 
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -88,12 +86,8 @@ const Terminal = () => {
             clearInput();
             setTableResponse([]);
             await sleep(1500);
-
-            // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
-            console.log("Passed: ", login, password, adress, port)
         })
         .catch((e) => {
-            console.log(driver);
             console.log(e)
             console.log("Could not connect")
         })
@@ -200,8 +194,6 @@ const Terminal = () => {
                     } else if (tokenizedCommand.length > 1 && tokenizedCommand[0] == "PREPARE") {
 
                         const prepareArg = command.slice(tokenizedCommand[0].length).trim()
-                        console.log("Preparing ", prepareArg)
-
                         // Tu jakies wysłanie tego
 
 
