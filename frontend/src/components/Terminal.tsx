@@ -13,8 +13,23 @@ const Terminal = () => {
     const [commandHistory, setCommandHistory] = useState<Array<string>>([]);
     const [positionInHistory, setPositionInHistory] = useState(0);
     const [serverResponse, setServerResponse] = useState<[string, string]>(["", ""]);
+
+    const wrappedSetServerReponse = (elem : any) => {
+        setServerResponse(elem);
+
+        setLoadingMode(false);
+        setReauthorisationMode(false);
+        console.log("TEST: ", elem);
+        if (elem[1] === "Authentication Error")
+        {
+            setPanelErrorMsg("Authorisation failed!");
+            setReauthorisationMode(true);
+        }
+    }
+
     const [tableResponse, setTableResponse] = useState<Array<Array<string>>>([[]]);
     const [editMode, setEditMode] = useState(false);
+    console.log("Response: ", serverResponse, tableResponse)
 
     const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -27,6 +42,10 @@ const Terminal = () => {
     const [login, setLogin] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [isFormPassed, setFormPassed] = useState(false);
+
+    const [reauthorisationMode, setReauthorisationMode] = useState(false);
+    const [loadingMode, setLoadingMode] = useState(false);
+    const [panelErrorMsg, setPanelErrorMsg] = useState<string>("");
 
     const changeCommand = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setCommand(event.target.value.length && event.target.value[0].trim() === '' ? 
@@ -52,22 +71,43 @@ const Terminal = () => {
     }
 
     const sendConnect = (driver : CQLDriver, username : string, password : string) => {
-        driver.connect(setServerResponse, setTableResponse, username, password);
+        driver.connect(wrappedSetServerReponse, setTableResponse, username, password);
     }
 
-    const connectUser = () => {
-        setServerResponse(["", ""])
-        driver.recreate(adress, port).then(() => {
+    function sleep(ms : number) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    const connectUser = async () => {
+        
+        setLoadingMode(true);
+        
+        driver.recreate(adress, port).then(async () => {
             sendConnect(driver, login, password);
+            setServerResponse(["", ""])
             clearInput();
             setTableResponse([]);
+            await sleep(1500);
 
             // TODO: przekazywanie danych bo drivera bo nie wiem czy on ma odbiór
             console.log("Passed: ", login, password, adress, port)
         })
         .catch((e) => {
+            console.log(driver);
+            console.log(e)
             console.log("Could not connect")
         })
+
+    }
+
+    const authorise = async () => {
+        
+        setReauthorisationMode(true);
+        setLoadingMode(true);
+        await sleep(1500);
+
+        driver.authenticate(login, password);
+        setLoadingMode(false);
     }
 
     // Retrieving previously used commands from the localStorage
@@ -253,7 +293,7 @@ const Terminal = () => {
 
     return (
         <div className={classes.terminalContainer}>
-            {!isFormPassed && <LaunchForm 
+            {(!isFormPassed || reauthorisationMode || loadingMode) && <LaunchForm 
                  adress={adress}
                  setAddress={setAddress}
                  port={port}
@@ -264,6 +304,12 @@ const Terminal = () => {
                  setPassword={setPassword}
                  setFormPassed={setFormPassed}
                  connectUser={connectUser}
+
+                 reauthorisationMode={reauthorisationMode}
+                 authorise={authorise}
+                 loadingMode={loadingMode}
+                 errorMsg={panelErrorMsg}
+                 setErrorMsg={setPanelErrorMsg}
             />}
             <img 
                 src={logo} 
