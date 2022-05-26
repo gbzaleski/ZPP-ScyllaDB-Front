@@ -63,11 +63,6 @@ const Terminal = () => {
         }
     }
 
-    // Send a msg to the websocket
-    const sendMsg = (msg : Buffer) => {
-        webSocket.current.send(msg);
-    }
-
     const sendConnect = (driver : CQLDriver, username : string, password : string) => {
         driver.connect(wrappedSetServerReponse, setTableResponse, username, password);
     }
@@ -329,7 +324,6 @@ const Terminal = () => {
                 tableResponse={tableResponse}
                 setTableResponse={setTableResponse}
                 driver={driver}
-                sendMsg={sendMsg}
             />
         </div>
     );

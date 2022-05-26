@@ -7,10 +7,9 @@ interface TableProps {
     driver : CQLDriver;
     headers: string[]; 
     data: string[][];
-    sendMsg: any;
 }
 
-function TableDisplayer({driver, headers, data, sendMsg} : TableProps)
+function TableDisplayer({driver, headers, data} : TableProps)
 {
     const classes = useStyles();
 

@@ -9,16 +9,10 @@ interface ServerResponseProps {
     setResponse: (s: [string, string]) => void;
     tableResponse: string[][];
     setTableResponse: (s: string[][]) => void;
-    sendMsg: (s : Buffer) => void; 
 }
 
-const ServerResponse = ({driver, websocket, response, setResponse, tableResponse, setTableResponse, sendMsg} : ServerResponseProps) => {
+const ServerResponse = ({driver, websocket, response, setResponse, tableResponse, setTableResponse} : ServerResponseProps) => {
     const classes = useStyles();
-
-    useEffect(() => {
-        // Create WebSocket connection.
-        websocket.current = new WebSocket('ws://localhost:8222', "cql");
-    }, []);
 
     const errorResponse = (message : string, errorType : string) => 
         <div className={classes.errorStruct}> <span className={classes.errorTag}>{errorType}:</span> {message}</div>;
@@ -34,7 +28,6 @@ const ServerResponse = ({driver, websocket, response, setResponse, tableResponse
                     driver = {driver}
                     headers = {tableResponse[0]}
                     data = {tableResponse.slice(1)}
-                    sendMsg ={sendMsg}
                 />
             :   
             (<div className={classes.lineContainer}>
